@@ -1,68 +1,33 @@
-import { useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+
+// imported services
 import NoteService from "../services/note.service";
+
+// imported components
 import NoteForm from "../components/NoteForm";
-import { noteValidators } from "../components/Validators";
-import { useHistory } from "react-router-dom";
 
-const CreateNote = () => {
-  const [fields, setFields] = useState({
-    title: "",
-    dueDate: "",
-    description: "",
-  });
-  const [errors, setErrors] = useState({
-    title: null,
-    dueDate: null,
-    description: null,
-  });
-
-  // connection with NoteService to be able to use all it services
-  // note.service.js is the bridge to connect frontend with backend
+const CreateNote: React.FC = () => {
   const noteService = new NoteService();
-  const history = useHistory();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (isValid()) {
-      createNote();
+  // Handle form submission
+  const handleCreateNote = async (data: {
+    title: string;
+    dueDate: string;
+    description: string;
+  }) => {
+    try {
+      await noteService.create(data);
+      navigate("/"); // Redirect to the home page after successful creation
+    } catch (error) {
+      console.error("Error creating note:", error);
     }
-  };
-
-  const createNote = () => {
-    noteService
-      .create(fields)
-      .then(() => {
-        history.push("/");
-      })
-      .catch((error) => console.log(error));
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFields({
-      ...fields,
-      [name]: value,
-    });
-    setErrors({
-      ...errors,
-      [name]: noteValidators[name](value),
-    });
-  };
-
-  const isValid = () => {
-    return !Object.keys(errors).some((key) => errors[key]);
   };
 
   return (
     <div className="flex justify-center">
-      <NoteForm
-        isValid={() => isValid()}
-        handleSubmit={(e) => handleSubmit(e)}
-        handleChange={(e) => handleChange(e)}
-        buttonType="Create"
-        fields={{ ...fields }}
-        errors={{ ...errors }}
-      />
+      <NoteForm onSubmit={handleCreateNote} buttonType="Create" />
     </div>
   );
 };

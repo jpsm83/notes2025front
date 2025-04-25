@@ -1,82 +1,64 @@
-import React, { useState, useEffect } from "react";
-import NoteService from "../services/note.service";
-import NoteForm from "../components/NoteForm";
-import { noteValidators } from "../components/Validators";
-import { useHistory } from "react-router-dom";
-import { BrowserRouter } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-const EditNote = (props) => {
-  const [fields, setFields] = useState({
+// imported services
+import NoteService from "../services/note.service";
+
+// imported components
+import NoteForm from "../components/NoteForm";
+
+const EditNote: React.FC = () => {
+  const [defaultValues, setDefaultValues] = useState({
     title: "",
     dueDate: "",
     description: "",
   });
-  const [errors, setErrors] = useState({
-    title: null,
-    dueDate: null,
-    description: null,
-  });
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { noteId } = useParams<{ noteId: string }>();
 
-  // connection with NoteService to be able to use all it services
-  // note.service.js is the bridge to connect frontend with backend
-  const noteService = new NoteService();
-  const history = useHistory();
+  const noteService = useMemo(() => new NoteService(), []);
 
   useEffect(() => {
-    // props.match.params.id is how you get params from the browser
-    // in this case we get the note "id"
-    const id = props.match.params.id;
-    noteService
-      .getOne(id)
-      .then((response) => {
-        // axios gives the response in '.data'
-        setFields(response.data);
-      })
-      .catch((error) => console.log(error));
-  }, []);
+    if (noteId) {
+      noteService
+        .getOne(noteId)
+        .then((response) => {
+          setDefaultValues(response.data);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching note:", error);
+          setLoading(false);
+        });
+    }
+  }, [noteId, noteService]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (isValid()) {
-      updateNote();
+  const handleUpdateNote = async (data: {
+    title: string;
+    dueDate: string;
+    description: string;
+  }) => {
+    try {
+      if (noteId) {
+        await noteService.updateOne(noteId, data);
+        navigate("/"); // Redirect to the home page after successful update
+      }
+    } catch (error) {
+      console.error("Error updating note:", error);
     }
   };
 
-  const updateNote = () => {
-    const id = props.match.params.id;
-    noteService
-      .updateOne(id, fields)
-      .then(() => {
-        history.push("/");
-      })
-      .catch((error) => console.log(error));
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFields({
-      ...fields,
-      [name]: value,
-    });
-    setErrors({
-      ...errors,
-      [name]: noteValidators[name](value),
-    });
-  };
-
-  const isValid = () => {
-    return !Object.keys(errors).some((key) => errors[key]);
-  };
+  if (loading) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <div className="flex justify-center">
       <NoteForm
-        isValid={() => isValid()}
-        handleSubmit={(e) => handleSubmit(e)}
-        handleChange={(e) => handleChange(e)}
+        onSubmit={handleUpdateNote}
         buttonType="Update"
-        fields={{ ...fields }}
-        errors={{ ...errors }}
+        defaultValues={defaultValues}
       />
     </div>
   );

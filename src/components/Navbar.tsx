@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/auth.context";
-import { BookOpen, LogOut } from "lucide-react";
+import { BookOpen, CircleUserRound, LogOut } from "lucide-react";
 
 function Navbar() {
   // Access user and logout directly from the useAuth hook
@@ -25,11 +25,15 @@ function Navbar() {
                 Hello {user.username}
               </p>
               <div>
-                <img
-                  src={user?.image}
-                  alt="User image"
-                  className="object-cover cursor-pointer h-12 w-12 flex justify-center flex-shrink-0 overflow-hidden items-center rounded-full"
-                />
+                {user?.image ? (
+                  <img
+                    src={user?.image}
+                    alt="User image"
+                    className="object-cover cursor-pointer h-12 w-12 flex justify-center flex-shrink-0 overflow-hidden items-center rounded-full"
+                  />
+                ) : (
+                  <CircleUserRound size={24} />
+                )}
               </div>
             </Link>
             <div

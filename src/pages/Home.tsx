@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAuth } from "../context/auth.context";
 
 // interfaces
@@ -8,53 +8,41 @@ import { INote } from "../services/note.service";
 import NoteCard from "../components/NoteCard";
 import NoteService from "../services/note.service";
 
-const Home = () => {
+const Home: React.FC = () => {
   const [notes, setNotes] = useState<INote[]>([]);
-
   const { user } = useAuth();
+  const noteService = useMemo(() => new NoteService(), []);
 
-  // connection with NoteService to be able to use all it services
-  // note.service.js is the bridge to connect frontend with backend
-  const noteService = new NoteService();
+  // Fetch notes from the backend
+  const refreshState = useCallback(async () => {
+    try {
+      const response = await noteService.get();
+      setNotes(response.data); // Set the fetched notes
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+    }
+  }, [noteService]);
 
-  // useEffect is the first method to execute in a component
+  // Fetch notes when the component mounts
   useEffect(() => {
     refreshState();
-  }, []);
+  }, [refreshState]);
 
-  const refreshState = () => {
-    noteService
-      .get()
-      .then((response) => {
-        // axios gives the response in '.data'
-        setNotes(response.data);
-      })
-      .catch((err) => console.error(err));
-  };
-
+  // Display note cards for the logged-in user
   const displayNoteCards = () => {
-    const userId = user?._id;
-    const organizedNotes = [...notes].sort(
-      (a: INote, b: INote) =>
-        new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
-    );
-    return organizedNotes.map((note) => {
-      // the username in notes comes with the id of the user
-      if (note.userId === userId) {
-        return (
-          <NoteCard
-            key={note.id}
-            {...note}
-            refreshState={() => refreshState()}
-          />
-        );
-      }
-    });
-  };
+    if (!user) return null;
 
-  // function sortByChoosen(sortType) {
-  //   return (a, b) => b[sortType] - a[sortType];
-  // }
+    const userId = user._id;
+    const organizedNotes = [...notes].sort(
+      (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+    );
+
+    return organizedNotes.map((note) =>
+      note.userId === userId ? (
+        <NoteCard key={note.id} {...note} refreshState={refreshState} />
+      ) : null
+    );
+  };
 
   return (
     <div>

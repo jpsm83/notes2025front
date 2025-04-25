@@ -1,75 +1,116 @@
 import React from "react";
-import moment from "moment";
-import { useHistory } from "react-router-dom";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
-export default function NoteForm(props) {
-  const { fields, isValid, errors, handleChange, handleSubmit, buttonType } =
-    props;
+// Define the form fields
+interface NoteFormFields {
+  dueDate: string;
+  title: string;
+  description: string;
+}
 
-  const history = useHistory();
+interface NoteFormProps {
+  onSubmit: SubmitHandler<NoteFormFields>;
+  buttonType: string;
+  defaultValues?: Partial<NoteFormFields>; // Default values for the form
+}
+
+const NoteForm: React.FC<NoteFormProps> = ({
+  onSubmit,
+  buttonType,
+  defaultValues = {},
+}) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<NoteFormFields>({
+    defaultValues,
+    mode: "onChange", // Enables validation on change
+  });
+
+  const navigate = useNavigate();
 
   return (
     <div className="flex w-full flex-col bg-blue-200 m-10 shadow-lg space-y-4 rounded-lg p-5">
       <form
         className="flex flex-col p-5 space-y-3 bg-gray-100 rounded-lg"
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
       >
+        {/* Due Date Field */}
         <div className="flex justify-end">
           <label className="font-bold text-yellow-800" htmlFor="dueDate">
-            Date:{" "}
+            Date:
           </label>
           <input
             className="text-yellow-800 outline-0 ml-2 rounded-lg px-2"
             type="date"
-            name="dueDate"
-            value={moment(new Date(fields.dueDate)).format("YYYY-MM-DD")}
-            onChange={handleChange}
+            {...register("dueDate", {
+              required: "Due date is required",
+            })}
           />
           {errors.dueDate && (
-            <p className="errorInputs sm:text-md">{errors.dueDate}</p>
+            <p className="errorInputs sm:text-md">{errors.dueDate.message}</p>
           )}
         </div>
+
+        {/* Title Field */}
         <div className="flex justify-start w-full">
           <label className="font-bold text-yellow-800" htmlFor="title">
-            Title:{" "}
+            Title:
           </label>
           <input
             className="text-yellow-800 ml-2 outline-0 rounded-lg px-2 flex-grow"
             type="text"
-            name="title"
-            value={fields.title}
-            onChange={handleChange}
+            {...register("title", {
+              required: "Title is required",
+              minLength: {
+                value: 3,
+                message: "Title must be at least 3 characters",
+              },
+            })}
           />
           {errors.title && (
-            <p className="errorInputs sm:text-md">{errors.title}</p>
+            <p className="errorInputs sm:text-md">{errors.title.message}</p>
           )}
         </div>
+
+        {/* Description Field */}
         <div className="flex justify-start w-full">
           <label className="font-bold text-yellow-800" htmlFor="description">
-            Description:{" "}
+            Description:
           </label>
           <input
             className="text-yellow-800 ml-2 outline-0 rounded-lg px-2 flex-grow"
             type="text"
-            name="description"
-            value={fields.description}
-            onChange={handleChange}
+            {...register("description", {
+              required: "Description is required",
+              minLength: {
+                value: 5,
+                message: "Description must be at least 5 characters",
+              },
+            })}
           />
           {errors.description && (
-            <p className="errorInputs sm:text-md">{errors.description}</p>
+            <p className="errorInputs sm:text-md">
+              {errors.description.message}
+            </p>
           )}
         </div>
+
+        {/* Buttons */}
         <div className="flex justify-between">
           <button
             className="shadow-md text-white w-40 text-center justify-center px-6 py-1 hover:shadow-xl bg-green-700 hover:scale-105 transition transform duration-200 ease-out rounded-lg"
-            disabled={!isValid()}
+            disabled={!isValid}
             type="submit"
           >
             {buttonType}
           </button>
           <button
             className="shadow-md text-white w-40 text-center justify-center px-6 py-1 hover:shadow-xl bg-red-800 hover:scale-105 transition transform duration-200 ease-out rounded-lg"
-            onClick={() => history.push("/")}
+            type="button"
+            onClick={() => navigate("/")}
           >
             Cancel
           </button>
@@ -77,4 +118,6 @@ export default function NoteForm(props) {
       </form>
     </div>
   );
-}
+};
+
+export default NoteForm;

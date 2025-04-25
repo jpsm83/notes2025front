@@ -1,71 +1,65 @@
-import React, { useState, useEffect } from "react";
-import UserForm from "../components/UserForm";
-import { withAuth } from "../context/auth.context";
-import { userValidators } from "../components/Validators";
-import { useHistory } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { SubmitHandler } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
-// edit & user (parameters) comes from context/auth.context.js - withAuth
-const EditUser = ({ edit, user }) => {
-  const [fields, setFields] = useState({
+// imported hooks
+import { useAuth } from "../context/auth.context";
+
+// imported components
+import UserForm from "../components/UserForm";
+import { IUserFormFields } from "../components/UserForm";
+
+const EditUser: React.FC = () => {
+  const { user, edit } = useAuth(); // Access user and edit from the auth context
+  const [defaultValues, setDefaultValues] = useState({
     username: "",
     email: "",
     password: "",
     image: "",
   });
-  const [errors, setErrors] = useState({
-    username: null,
-    email: null,
-    password: null,
-    image: null,
-  });
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const history = useHistory();
-
-  // better get the user details on the DB so you
-  // can get the image as well
-  // user from auth gives you email & username only
   useEffect(() => {
-    setFields(user);
-  }, []);
+    if (user) {
+      // Populate default values with user data
+      setDefaultValues({
+        username: user.username || "",
+        email: user.email || "",
+        password: "", // Password should be empty for security reasons
+        image: user.image || "",
+      });
+      setLoading(false);
+    }
+  }, [user]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (isValid()) {
-      edit(fields);
-      history.push("/");
+  const handleUpdateUser: SubmitHandler<IUserFormFields> = async (data: {
+    username: string;
+    email: string;
+    password: string;
+  }) => {
+    try {
+      await edit(data); // Call the edit method from the auth context
+      navigate("/"); // Redirect to the home page after successful update
+    } catch (error) {
+      console.error("Error updating user:", error);
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFields({
-      ...fields,
-      [name]: value,
-    });
-    setErrors({
-      ...errors,
-      [name]: userValidators[name](value),
-    });
-  };
-
-  const isValid = () => {
-    return !Object.keys(errors).some((key) => errors[key]);
-  };
+  if (loading) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <div className="flex justify-center">
       <UserForm
-        isValid={() => isValid()}
-        handleSubmit={(e) => handleSubmit(e)}
-        handleChange={(e) => handleChange(e)}
+        onSubmit={handleUpdateUser}
         buttonType="Update"
-        fields={{ ...fields }}
-        errors={{ ...errors }}
+        isEditMode={true}
+        defaultValues={defaultValues}
       />
     </div>
   );
 };
 
-// withAuth comes from context and alow the component to use it
-// methods - isLoading, isLoggedin, user, signup, login, logout, edit
-export default withAuth(EditUser);
+export default EditUser;

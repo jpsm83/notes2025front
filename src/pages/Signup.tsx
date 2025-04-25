@@ -1,65 +1,34 @@
-import React, { useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { SubmitHandler } from "react-hook-form";
+
+// imported hooks
+import { useAuth } from "../context/auth.context";
+
+// imported components
 import UserForm from "../components/UserForm";
-import { withAuth } from "../context/auth.context";
-import { userValidators } from "../components/Validators";
-import { useHistory } from "react-router-dom";
+import { IUserFormFields } from "../components/UserForm";
 
-// signup (parameters) comes from context/auth.context.js - withAuth
-const Signup = ({ signup }) => {
-  const [fields, setFields] = useState({
-    username: "",
-    password: "",
-    email: "",
-  });
-  const [errors, setErrors] = useState({
-    username: null,
-    password: null,
-    email: null,
-  });
+const Signup: React.FC = () => {
+  const { signup } = useAuth(); // Access the signup method from the auth context
+  const navigate = useNavigate();
 
-  const history = useHistory();
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (isValid()) {
-      // signup comes from context/auth.context.js - withAuth
-      signup(fields);
-      history.push("/");
+  const handleSignup: SubmitHandler<IUserFormFields> = async (data) => {
+    try {
+      await signup(data); // Call the signup method from the auth context
+      navigate("/"); // Redirect to the home page after successful signup
+    } catch (error) {
+      console.error("Error during signup:", error);
     }
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFields({
-      ...fields,
-      [name]: value,
-    });
-    setErrors({
-      ...errors,
-      [name]: userValidators[name](value),
-    });
-  };
-
-  const isValid = () => {
-    return !Object.keys(errors).some((key) => errors[key]);
   };
 
   return (
     <div className="flex justify-center">
       <div className="m-10 flex flex-shrink">
-        <UserForm
-          isValid={() => isValid()}
-          handleSubmit={(e) => handleSubmit(e)}
-          handleChange={(e) => handleChange(e)}
-          buttonType="Signup"
-          fields={{ ...fields }}
-          errors={{ ...errors }}
-        />
+        <UserForm onSubmit={handleSignup} buttonType="Signup" />
       </div>
     </div>
   );
 };
 
-// withAuth comes from context and alow the component to use it
-// methods - isLoading, isLoggedin, user, signup, login, logout, edit
-export default withAuth(Signup);
+export default Signup;
