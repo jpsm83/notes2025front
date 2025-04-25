@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@layer components {
+  .anchorLink {
+    @apply text-xs text-gray-600 font-sans;
+  }
+
+  .footTag {
+    @apply flex flex-col items-start my-10 text-sm flex-wrap;
+  }
+
+  .errorInputs {
+    @apply text-sm text-red-700 mt-1 font-bold;
+  }
+}
