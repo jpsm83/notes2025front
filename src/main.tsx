@@ -27,31 +27,31 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> }, // Default child ("/" renders Home)
       { path: "note", element: <Note /> },
-      {
-        path: "signup",
-        element: <AnounRoute />, // AnounRoute wraps the Signup page
-        children: [{ index: true, element: <Signup /> }],
-      },
-      {
-        path: "login",
-        element: <AnounRoute />, // AnounRoute wraps the Login page
-        children: [{ index: true, element: <Login /> }],
-      },
-      {
-        path: "editUser",
-        element: <PrivateRoute />, // PrivateRoute wraps the EditUser page
-        children: [{ index: true, element: <EditUser /> }],
-      },
-      {
-        path: "createNote",
-        element: <PrivateRoute />, // PrivateRoute wraps the CreateNote page
-        children: [{ index: true, element: <CreateNote /> }],
-      },
-      {
-        path: "editNote/:noteId",
-        element: <PrivateRoute />, // PrivateRoute wraps the EditNote page
-        children: [{ index: true, element: <EditNote /> }],
-      },
+      // {
+      //   path: "signup",
+      //   element: <AnounRoute />, // AnounRoute wraps the Signup page
+      //   children: [{ index: true, element: <Signup /> }],
+      // },
+      // {
+      //   path: "login",
+      //   element: <AnounRoute />, // AnounRoute wraps the Login page
+      //   children: [{ index: true, element: <Login /> }],
+      // },
+      // {
+      //   path: "editUser",
+      //   element: <PrivateRoute />, // PrivateRoute wraps the EditUser page
+      //   children: [{ index: true, element: <EditUser /> }],
+      // },
+      // {
+      //   path: "createNote",
+      //   element: <PrivateRoute />, // PrivateRoute wraps the CreateNote page
+      //   children: [{ index: true, element: <CreateNote /> }],
+      // },
+      // {
+      //   path: "editNote/:noteId",
+      //   element: <PrivateRoute />, // PrivateRoute wraps the EditNote page
+      //   children: [{ index: true, element: <EditNote /> }],
+      // },
     ],
   },
 ]);

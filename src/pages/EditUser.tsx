@@ -10,19 +10,19 @@ const EditUser = ({ edit, user }) => {
     username: "",
     email: "",
     password: "",
-    photo: "",
+    image: "",
   });
   const [errors, setErrors] = useState({
     username: null,
     email: null,
     password: null,
-    photo: null,
+    image: null,
   });
 
   const history = useHistory();
 
   // better get the user details on the DB so you
-  // can get the photo as well
+  // can get the image as well
   // user from auth gives you email & username only
   useEffect(() => {
     setFields(user);

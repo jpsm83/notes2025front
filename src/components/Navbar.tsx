@@ -1,21 +1,17 @@
-/* eslint-disable jsx-a11y/img-redundant-alt */
-import React from "react";
 import { Link } from "react-router-dom";
-import { withAuth } from "../context/auth.context";
-import { BookOpenIcon, LogoutIcon } from "@heroicons/react/outline";
+import { useAuth } from "../context/auth.context";
+import { BookOpen, LogOut } from "lucide-react";
 
-function Header(props) {
-  // user and logout come from context/auth.context.js
-  // it can be use in any component because it is exported as AuthProvider
-  // and wrap all the aplication in its root index.js
-  const { user, logout } = props;
+function Navbar() {
+  // Access user and logout directly from the useAuth hook
+  const { user, logout } = useAuth();
 
   return (
     <nav>
       <div className="p-5 bg-blue-400 text-white flex justify-between">
         <Link to="/">
           <div className="cursor-pointer flex space-x-2 items-center justify-start mr-6">
-            <BookOpenIcon className="h-10" />
+            <BookOpen className="h-10" />
             <p>To Do App</p>
           </div>
         </Link>
@@ -23,15 +19,15 @@ function Header(props) {
           <div className="flex space-x-4 items-center justify-between">
             <Link
               className="flex space-x-4 items-center"
-              to={`/edit-user/${user.id}`}
+              to={`/edit-user/${user._id}`}
             >
               <p className="font-bold sm:text-xl text-md">
                 Hello {user.username}
               </p>
               <div>
                 <img
-                  src={user.photo}
-                  alt="User photo"
+                  src={user?.image}
+                  alt="User image"
                   className="object-cover cursor-pointer h-12 w-12 flex justify-center flex-shrink-0 overflow-hidden items-center rounded-full"
                 />
               </div>
@@ -40,7 +36,7 @@ function Header(props) {
               onClick={logout}
               className="cursor-pointer flex space-x-2 items-center"
             >
-              <LogoutIcon className="h-8" />
+              <LogOut className="h-8" />
             </div>
           </div>
         ) : (
@@ -69,6 +65,4 @@ function Header(props) {
   );
 }
 
-// withAuth comes from context and alow the component to use it
-// methods - isLoading, isLoggedin, user, signup, login, logout, edit
-export default withAuth(Header);
+export default Navbar;

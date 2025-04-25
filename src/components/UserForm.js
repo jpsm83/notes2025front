@@ -63,19 +63,19 @@ export default function UserForm(props) {
         </div>
         {window.location.pathname.split("/")[1] === "edit-user" && (
           <div className="flex justify-start w-full">
-            <label className="font-bold text-yellow-800" htmlFor="photo">
+            <label className="font-bold text-yellow-800" htmlFor="image">
               Photo:{" "}
             </label>
             <input
               className="text-yellow-800 ml-2 outline-0 rounded-lg px-2 flex-grow"
               type="text"
-              value={fields.photo}
-              name="photo"
+              value={fields.image}
+              name="image"
               onChange={handleChange}
               placeholder={"URL Please"}
             />
-            {errors.photo && (
-              <p className="errorInputs sm:text-md">{errors.photo}</p>
+            {errors.image && (
+              <p className="errorInputs sm:text-md">{errors.image}</p>
             )}
           </div>
         )}

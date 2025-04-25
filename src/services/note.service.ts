@@ -1,22 +1,28 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 
 // Define types for the data and responses
-interface INote {
+export interface INote {
   id: string;
+  dueDate: string;
   title: string;
-  content: string;
+  description: string;
+  priority: boolean;
+  completed: boolean;
+  userId: string;
   createdAt: string;
   updatedAt: string;
 }
 
 interface ICreateNoteData {
   title: string;
-  content: string;
+  description: string;
 }
 
 interface IUpdateNoteData {
   title?: string;
-  content?: string;
+  description?: string;
+  priority?: boolean;
+  completed?: boolean;
 }
 
 export default class NoteService {

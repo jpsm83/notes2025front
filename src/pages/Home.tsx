@@ -1,13 +1,19 @@
-/* eslint-disable array-callback-return */
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "../context/auth.context";
+
+// interfaces
+import { INote } from "../services/note.service";
+
+// components
 import NoteCard from "../components/NoteCard";
-import { withAuth } from "../context/auth.context";
 import NoteService from "../services/note.service";
 
-const Home = ({ user }) => {
-  const [notes, setNotes] = useState([]);
+const Home = () => {
+  const [notes, setNotes] = useState<INote[]>([]);
 
-  // connection with RecipeService to be able to use all it services
+  const { user } = useAuth();
+
+  // connection with NoteService to be able to use all it services
   // note.service.js is the bridge to connect frontend with backend
   const noteService = new NoteService();
 
@@ -27,13 +33,14 @@ const Home = ({ user }) => {
   };
 
   const displayNoteCards = () => {
-    const userId = user.id;
-    let organizedNotes = [...notes].sort(
-      (a, b) => new Date(a.dueDate) - new Date(b.dueDate)
+    const userId = user?._id;
+    const organizedNotes = [...notes].sort(
+      (a: INote, b: INote) =>
+        new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
     );
     return organizedNotes.map((note) => {
       // the username in notes comes with the id of the user
-      if (note.username === userId) {
+      if (note.userId === userId) {
         return (
           <NoteCard
             key={note.id}
@@ -66,6 +73,4 @@ const Home = ({ user }) => {
   );
 };
 
-// withAuth comes from context and alow the component to use it
-// methods - isLoading, isLoggedin, user, signup, login, logout, edit
-export default withAuth(Home);
+export default Home;

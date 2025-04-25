@@ -13,10 +13,10 @@ export interface ILoginData {
 }
 
 export interface IUser {
-  id: string;
+  _id: string;
   username: string;
   email: string;
-  password?: string;
+  image?: string;
 }
 
 export default class AuthService {
@@ -24,7 +24,7 @@ export default class AuthService {
 
   constructor() {
     this.instance = axios.create({
-      baseURL: `${process.env.REACT_APP_API_URL}/auth`,
+      baseURL: `${import.meta.env.VITE_API_URL}/auth`,
       withCredentials: true, // Ensures cookies are sent for CORS
     });
   }

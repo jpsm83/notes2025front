@@ -38,10 +38,10 @@ const userValidators = {
     return message;
   },
 
-  photo: (value) => {
+  image: (value) => {
     let message;
     if (value.length > 1000) {
-      message = "Invalid photo!";
+      message = "Invalid image!";
     }
     return message;
   },
