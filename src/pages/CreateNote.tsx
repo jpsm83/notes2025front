@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import NoteService from "../services/note.service";
 import NoteForm from "../components/NoteForm";
 import { noteValidators } from "../components/Validators";

@@ -4,13 +4,16 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/auth.context";
 import "./index.css";
 
+// authRoutes
+import PrivateRoute from "./authRoutes/PrivateRoute.tsx";
+import AnounRoute from "./authRoutes/AnounRoute.tsx";
+
+// pages
 import App from "./App.tsx";
 import Home from "./pages/Home.js";
 import Note from "./pages/Note";
 import EditNote from "./pages/EditNote";
 import CreateNote from "./pages/CreateNote";
-import PrivateRoute from "./components/Routes/PrivateRoute/PrivateRoute";
-import AnounRoute from "./components/Routes/AnounRoute/AnounRoute";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import EditUser from "./pages/EditUser";
@@ -24,13 +27,30 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> }, // Default child ("/" renders Home)
       { path: "note", element: <Note /> },
-      { path: "signup", element: <AnounRoute component={Signup} /> },
-      { path: "login", element: <AnounRoute component={Login} /> },
-      { path: "editUser", element: <PrivateRoute component={EditUser} /> },
-      { path: "createNote", element: <PrivateRoute component={CreateNote} /> },
+      {
+        path: "signup",
+        element: <AnounRoute />, // AnounRoute wraps the Signup page
+        children: [{ index: true, element: <Signup /> }],
+      },
+      {
+        path: "login",
+        element: <AnounRoute />, // AnounRoute wraps the Login page
+        children: [{ index: true, element: <Login /> }],
+      },
+      {
+        path: "editUser",
+        element: <PrivateRoute />, // PrivateRoute wraps the EditUser page
+        children: [{ index: true, element: <EditUser /> }],
+      },
+      {
+        path: "createNote",
+        element: <PrivateRoute />, // PrivateRoute wraps the CreateNote page
+        children: [{ index: true, element: <CreateNote /> }],
+      },
       {
         path: "editNote/:noteId",
-        element: <PrivateRoute component={EditNote} />,
+        element: <PrivateRoute />, // PrivateRoute wraps the EditNote page
+        children: [{ index: true, element: <EditNote /> }],
       },
     ],
   },
