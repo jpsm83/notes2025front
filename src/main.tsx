@@ -26,7 +26,6 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <Home /> }, // Default child ("/" renders Home)
-      { path: "note", element: <Note /> },
       {
         path: "signup",
         element: <AnounRoute />, // AnounRoute wraps the Signup page
@@ -46,6 +45,11 @@ const router = createBrowserRouter([
         path: "createNote",
         element: <PrivateRoute />, // PrivateRoute wraps the CreateNote page
         children: [{ index: true, element: <CreateNote /> }],
+      },
+      {
+        path: "note/:noteId",
+        element: <PrivateRoute />, // PrivateRoute wraps the EditNote page
+        children: [{ index: true, element: <Note /> }],
       },
       {
         path: "editNote/:noteId",
@@ -73,17 +77,3 @@ createRoot(rootElement).render(
     </AuthProvider>
   </StrictMode>
 );
-
-// createRoot(rootElement).render(
-//   <StrictMode>
-//     {/* <ToastContainer /> */}
-//     <BrowserRouter>
-//       {/* AuthProvider comes from context and wrap the application
-//     it allows the app to use all its functions in any component-
-//     isLoading, isLoggedin, user, signup, login, logout, edit */}
-//       <AuthProvider>
-//         <App />
-//       </AuthProvider>
-//     </BrowserRouter>
-//   </StrictMode>
-// );

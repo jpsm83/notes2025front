@@ -1,21 +1,21 @@
 import React from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { useForm, SubmitHandler } from "react-hook-form";
 
 // Define the form fields
-interface NoteFormFields {
+interface INoteFormFields {
   dueDate: string;
   title: string;
   description: string;
 }
 
-interface NoteFormProps {
-  onSubmit: SubmitHandler<NoteFormFields>;
+interface INoteFormProps {
+  onSubmit: SubmitHandler<INoteFormFields>;
   buttonType: string;
-  defaultValues?: Partial<NoteFormFields>; // Default values for the form
+  defaultValues?: Partial<INoteFormFields>; // Default values for the form
 }
 
-const NoteForm: React.FC<NoteFormProps> = ({
+const NoteForm: React.FC<INoteFormProps> = ({
   onSubmit,
   buttonType,
   defaultValues = {},
@@ -24,7 +24,7 @@ const NoteForm: React.FC<NoteFormProps> = ({
     register,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<NoteFormFields>({
+  } = useForm<INoteFormFields>({
     defaultValues,
     mode: "onChange", // Enables validation on change
   });

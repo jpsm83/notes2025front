@@ -6,16 +6,15 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import AuthService, { ISignupData, ILoginData, IUser } from "../services/auth.service";
+import AuthService, { ILoginData } from "../services/auth.service";
+import { IUser } from "../interfaces/user";
 
 interface AuthContextType {
   isLoading: boolean;
   isLoggedin: boolean;
   user: IUser | null;
-  signup: (data: ISignupData) => Promise<void>;
   login: (data: ILoginData) => Promise<void>;
   logout: () => Promise<void>;
-  edit: (data: Partial<IUser>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,25 +24,59 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isLoggedin, setIsLoggedin] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoggedin, setIsLoggedin] = useState(false);
   const [user, setUser] = useState<IUser | null>(null);
 
   const authService = new AuthService();
 
   useEffect(() => {
-    const checkLogin = async () => {
+    let refreshTokenInterval: NodeJS.Timeout;
+  
+    const setupRefreshToken = () => {
+      refreshTokenInterval = setInterval(async () => {
+        try {
+          const loggedInUser = await authService.isLoggedIn();
+          if (loggedInUser) {
+            setIsLoggedin(true);
+            setUser(loggedInUser);
+          } else {
+            setIsLoggedin(false);
+            setUser(null);
+          }
+        } catch (error) {
+          console.error("Error refreshing token:", error);
+          setIsLoggedin(false);
+          setUser(null);
+        }
+      }, 12 * 60 * 1000); // Refresh every 12 minutes
+    };
+  
+    if (!isLoading && isLoggedin) {
+      setupRefreshToken();
+    }
+  
+    return () => {
+      if (refreshTokenInterval) {
+        clearInterval(refreshTokenInterval);
+      }
+    };
+  }, [isLoading, isLoggedin]);
+  
+  // Check login status on component mount
+  useEffect(() => {
+    const checkLoginStatus = async () => {
       try {
-        const response = await authService.isLoggedin();
-        if (response.data) {
+        const loggedInUser = await authService.isLoggedIn();
+        if (loggedInUser) {
           setIsLoggedin(true);
-          setUser(response.data);
+          setUser(loggedInUser);
         } else {
           setIsLoggedin(false);
           setUser(null);
         }
-      } catch (err) {
-        console.error("Error checking login status:", err);
+      } catch (error) {
+        console.error("Error checking login status:", error);
         setIsLoggedin(false);
         setUser(null);
       } finally {
@@ -51,35 +84,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    checkLogin();
+    checkLoginStatus();
   }, []);
 
-  const signup = useCallback(async (data: ISignupData) => {
-    try {
-      const response = await authService.signup(data);
-      if (response.data) {
-        setIsLoggedin(true);
-        setUser(response.data);
-      }
-    } catch (err) {
-      console.error("Error during signup:", err);
-      setIsLoggedin(false);
-      setUser(null);
-    }
-  }, []);
-
+  // Login function
   const login = useCallback(async (data: ILoginData) => {
     try {
       const response = await authService.login(data);
-      setIsLoggedin(true);
-      setUser(response.data);
-    } catch (err) {
-      console.error("Error during login:", err);
+      const token = response.data.accessToken;
+      if (token) {
+        localStorage.setItem("jwt", token);
+        const user = authService.decodeUser(token);
+        setIsLoggedin(true);
+        setUser(user);
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
       setIsLoggedin(false);
       setUser(null);
     }
   }, []);
-
+  
+  // Logout function
   const logout = useCallback(async () => {
     try {
       await authService.logout();
@@ -89,23 +115,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const edit = useCallback(async (data: Partial<IUser>) => {
-    try {
-      const response = await authService.edit(data);
-      setUser(response.data);
-    } catch (error) {
-      console.error(error);
-    }
-  }, []);
-
   const value: AuthContextType = {
     isLoading,
     isLoggedin,
     user,
-    signup,
     login,
     logout,
-    edit,
   };
 
   return (

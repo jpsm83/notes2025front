@@ -1,12 +1,14 @@
 import React from "react";
-import moment from "moment";
-import NoteService from "../services/note.service";
 import { useNavigate } from "react-router-dom";
+import moment from "moment";
 import { Check, Star } from "lucide-react";
 
+// imported hooks
+import NoteService from "../services/note.service";
+
 // Define the props for the NoteCard component
-interface NoteCardProps {
-  id: string;
+interface INoteCardProps {
+  _id: string;
   title: string;
   completed: boolean;
   priority: boolean;
@@ -14,8 +16,8 @@ interface NoteCardProps {
   refreshState: () => void;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({
-  id,
+const NoteCard: React.FC<INoteCardProps> = ({
+  _id,
   title,
   completed,
   priority,
@@ -28,7 +30,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   // Delete a note
   const deleteNote = async () => {
     try {
-      await noteService.deleteOne(id);
+      await noteService.deleteOne(_id);
       refreshState();
     } catch (error) {
       console.error("Error deleting note:", error);
@@ -38,7 +40,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   // Toggle the priority of a note
   const togglePriority = async () => {
     try {
-      await noteService.updateOne(id, { priority: !priority });
+      await noteService.updateOne(_id, { priority: !priority });
       refreshState();
     } catch (error) {
       console.error("Error toggling priority:", error);
@@ -48,7 +50,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   // Toggle the completion status of a note
   const toggleDone = async () => {
     try {
-      await noteService.updateOne(id, { completed: !completed });
+      await noteService.updateOne(_id, { completed: !completed });
       refreshState();
     } catch (error) {
       console.error("Error toggling completion status:", error);
@@ -57,7 +59,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
   // Navigate to the note detail page
   const noteDetail = () => {
-    navigate(`/note/${id}`);
+    navigate(`/note/${_id}`);
   };
 
   return (

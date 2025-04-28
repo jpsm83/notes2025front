@@ -1,11 +1,13 @@
 import React from "react";
-import moment from "moment";
-import NoteService from "../services/note.service";
 import { useNavigate, Link } from "react-router-dom";
+import moment from "moment";
 import { Check, Star } from "lucide-react";
 
+// imported hooks
+import NoteService from "../services/note.service";
+
 // Define the props for the NoteDetail component
-interface NoteDetailProps {
+interface INoteDetailProps {
   id: string;
   title: string;
   description: string;
@@ -15,7 +17,7 @@ interface NoteDetailProps {
   refreshState: () => void;
 }
 
-const NoteDetail: React.FC<NoteDetailProps> = ({
+const NoteDetail: React.FC<INoteDetailProps> = ({
   id,
   title,
   description,

@@ -1,62 +1,52 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
-
-// Define types for the data and responses
-export interface INote {
-  id: string;
-  dueDate: string;
-  title: string;
-  description: string;
-  priority: boolean;
-  completed: boolean;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface ICreateNoteData {
-  title: string;
-  description: string;
-}
-
-interface IUpdateNoteData {
-  title?: string;
-  description?: string;
-  priority?: boolean;
-  completed?: boolean;
-}
+import { INote } from "../interfaces/note";
 
 export default class NoteService {
   private instance: AxiosInstance;
 
   constructor() {
     this.instance = axios.create({
-      baseURL: `${process.env.REACT_APP_API_URL}/notes`,
+      baseURL: `${import.meta.env.VITE_API_URL}/api/v1/notes`,
       withCredentials: true, // Ensures cookies are sent for CORS
     });
+
+    // Add an interceptor to include the Authorization header
+    this.instance.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem("jwt"); // Retrieve the JWT from localStorage
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`; // Add the token to the Authorization header
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
   }
 
   // Create a new note
-  create = (data: ICreateNoteData): Promise<AxiosResponse<INote>> => {
+  createNote = (data: INote): Promise<AxiosResponse<INote>> => {
     return this.instance.post<INote>("/", data);
   };
 
   // Get all notes
-  get = (): Promise<AxiosResponse<INote[]>> => {
+  getNotes = (): Promise<AxiosResponse<INote[]>> => {
     return this.instance.get<INote[]>("/");
   };
 
   // Get a single note by ID
-  getOne = (id: string): Promise<AxiosResponse<INote>> => {
+  getNote = (id: string): Promise<AxiosResponse<INote>> => {
     return this.instance.get<INote>(`/${id}`);
   };
 
   // Delete a note by ID
-  deleteOne = (id: string): Promise<AxiosResponse<void>> => {
+  deleteNote = (id: string): Promise<AxiosResponse<void>> => {
     return this.instance.delete<void>(`/${id}`);
   };
 
   // Update a note by ID
-  updateOne = (id: string, data: IUpdateNoteData): Promise<AxiosResponse<INote>> => {
-    return this.instance.put<INote>(`/${id}`, data);
+  updateNote = (id: string, data: INote): Promise<AxiosResponse<INote>> => {
+    return this.instance.patch<INote>(`/${id}`, data);
   };
 }

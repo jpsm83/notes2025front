@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/auth.context";
 import { BookOpen, CircleUserRound, LogOut } from "lucide-react";
+
+// imported hooks
+import { useAuth } from "../context/auth.context";
 
 function Navbar() {
   // Access user and logout directly from the useAuth hook
