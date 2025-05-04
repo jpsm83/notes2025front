@@ -6,14 +6,14 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import AuthService, { ILoginData } from "../services/auth.service";
-import { IUser } from "../interfaces/user";
+import AuthService from "../services/auth.service";
+import { ILoginFields, IUser } from "../interfaces/user";
 
 interface AuthContextType {
   isLoading: boolean;
   isLoggedin: boolean;
   user: IUser | null;
-  login: (data: ILoginData) => Promise<void>;
+  login: (data: ILoginFields) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let refreshTokenInterval: NodeJS.Timeout;
-  
+
     const setupRefreshToken = () => {
       refreshTokenInterval = setInterval(async () => {
         try {
@@ -51,18 +51,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }, 12 * 60 * 1000); // Refresh every 12 minutes
     };
-  
+
     if (!isLoading && isLoggedin) {
       setupRefreshToken();
     }
-  
+
     return () => {
       if (refreshTokenInterval) {
         clearInterval(refreshTokenInterval);
       }
     };
   }, [isLoading, isLoggedin]);
-  
+
   // Check login status on component mount
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Login function
-  const login = useCallback(async (data: ILoginData) => {
+  const login = useCallback(async (data: ILoginFields) => {
     try {
       const response = await authService.login(data);
       const token = response.data.accessToken;
@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
     }
   }, []);
-  
+
   // Logout function
   const logout = useCallback(async () => {
     try {

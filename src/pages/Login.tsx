@@ -1,35 +1,28 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-
-// imported hooks
-import { useAuth } from "../context/auth.context";
-
-// imported components
+import { SubmitHandler } from "react-hook-form";
+import AuthService from "../services/auth.service";
 import UserForm from "../components/UserForm";
+import { ILoginFields } from "../interfaces/user";
 
 const Login: React.FC = () => {
-  const { login } = useAuth(); // Access the login method from the auth context
   const navigate = useNavigate();
+  const authService = new AuthService();
 
-  const handleLogin = async (data: { email: string; password: string }) => {
+  const handleLogin: SubmitHandler<ILoginFields> = async (data) => {
     try {
-      await login(data); // Call the login method from the auth context
-      navigate("/"); // Redirect to the home page after successful login
+      await authService.login(data);
+      navigate("/");
     } catch (error) {
       console.error("Error during login:", error);
     }
   };
 
   return (
-    <div className="flex justify-center">
-      <div className="m-10 flex flex-shrink">
-        <UserForm
-          onSubmit={handleLogin}
-          buttonType="Login"
-          isEditMode={false} // Ensure username is not shown
-        />
-      </div>
-    </div>
+    <UserForm<ILoginFields>
+      onSubmit={handleLogin}
+      buttonType="Login"
+    />
   );
 };
 

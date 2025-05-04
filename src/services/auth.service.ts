@@ -1,10 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { IUser } from "../interfaces/user";
 
-export interface ILoginData {
-  email: string;
-  password: string;
-}
+import { ILoginFields } from "../interfaces/user";
 
 export default class AuthService {
   private instance: AxiosInstance;
@@ -17,7 +14,7 @@ export default class AuthService {
   }
 
   // Login method
-  login = async (data: ILoginData): Promise<AxiosResponse<IUser>> => {
+  login = async (data: ILoginFields): Promise<AxiosResponse<IUser>> => {
     const response = await this.instance.post<IUser>("/", data);
     const token = response.data.accessToken; // Extract the accessToken
     if (token) {
@@ -62,6 +59,8 @@ export default class AuthService {
         username: payload.UserInfo.username,
         email: payload.UserInfo.email,
         roles: payload.UserInfo.roles,
+        image: payload.UserInfo.image,
+        accessToken: token,
       };
     } catch (e) {
       console.error("Failed to decode JWT", e);

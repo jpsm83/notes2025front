@@ -1,78 +1,85 @@
-import React from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import {
+  useForm,
+  SubmitHandler,
+  FieldPath,
+  FieldValues,
+  DefaultValues,
+} from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
 
-// Define the form fields
-export interface IUserFormFields {
-  username: string;
-  email: string;
-  password: string;
-}
-
-interface IUserFormProps {
-  onSubmit: SubmitHandler<IUserFormFields>;
+interface IUserFormProps<T extends FieldValues> {
+  onSubmit: SubmitHandler<T>;
   buttonType: string;
-  isEditMode?: boolean; // Determines if the form is for editing a user
-  defaultValues?: Partial<IUserFormFields>; // Default values for the form
+  isEditMode?: boolean;
+  defaultValues?: Partial<T>;
 }
 
-const UserForm: React.FC<IUserFormProps> = ({
+const UserForm = <T extends FieldValues>({
   onSubmit,
   buttonType,
   isEditMode = false,
   defaultValues = {},
-}) => {
+}: IUserFormProps<T>) => {
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<IUserFormFields>({
-    defaultValues,
-    mode: "onChange", // Enables validation on change
+  } = useForm<T>({
+    defaultValues: defaultValues as DefaultValues<T>,
+    mode: "onChange",
   });
 
   const navigate = useNavigate();
 
   return (
-    <div className="flex w-full flex-col bg-blue-200 m-10 shadow-lg space-y-4 rounded-lg p-5">
+    <div className="flex w-full max-w-lg mx-auto flex-col bg-white shadow-lg rounded-lg p-8 m-8">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+        {isEditMode ? "Edit User" : buttonType === "Login" ? "Login" : "Signup"}
+      </h2>
       <form
-        className="flex flex-col p-5 space-y-3 bg-gray-100 rounded-lg"
-        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col space-y-6"
+        onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}
       >
         {/* Username field (only for signup or edit-user) */}
-        {!isEditMode && (
-          <div className="flex justify-start w-full">
-            <label className="font-bold text-yellow-800" htmlFor="username">
-              Username:
+        {(isEditMode || buttonType !== "Login") && (
+          <div className="flex flex-col">
+            <label
+              className="text-sm font-medium text-gray-700 mb-1"
+              htmlFor="username"
+            >
+              Username
             </label>
             <input
-              className="text-yellow-800 ml-2 outline-0 rounded-lg px-2 flex-grow"
+              className="border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="text"
-              {...register("username", {
+              {...register("username" as FieldPath<T>, {
                 required: "Username is required",
                 minLength: {
-                  value: 3,
-                  message: "Username must be at least 3 characters",
+                  value: 5,
+                  message: "Username must be at least 5 characters",
                 },
               })}
             />
-            {errors.username && (
-              <p className="errorInputs sm:text-md">
-                {errors.username.message}
+            {errors["username" as FieldPath<T>] && (
+              <p className="text-sm text-red-600 mt-1">
+                {String(errors["username" as FieldPath<T>]?.message)}
               </p>
             )}
           </div>
         )}
 
         {/* Email field */}
-        <div className="flex justify-start w-full">
-          <label className="font-bold text-yellow-800" htmlFor="email">
-            Email:
+        <div className="flex flex-col">
+          <label
+            className="text-sm font-medium text-gray-700 mb-1"
+            htmlFor="email"
+          >
+            Email
           </label>
           <input
-            className="text-yellow-800 ml-2 outline-0 rounded-lg px-2 flex-grow"
+            className="border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="email"
-            {...register("email", {
+            {...register("email" as FieldPath<T>, {
               required: "Email is required",
               pattern: {
                 value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
@@ -80,20 +87,25 @@ const UserForm: React.FC<IUserFormProps> = ({
               },
             })}
           />
-          {errors.email && (
-            <p className="errorInputs sm:text-md">{errors.email.message}</p>
+          {errors["email" as FieldPath<T>] && (
+            <p className="text-sm text-red-600 mt-1">
+              {String(errors["email" as FieldPath<T>]?.message)}
+            </p>
           )}
         </div>
 
         {/* Password field */}
-        <div className="flex justify-start w-full">
-          <label className="font-bold text-yellow-800" htmlFor="password">
-            Password:
+        <div className="flex flex-col">
+          <label
+            className="text-sm font-medium text-gray-700 mb-1"
+            htmlFor="password"
+          >
+            Password
           </label>
           <input
-            className="text-yellow-800 ml-2 outline-0 rounded-lg px-2 flex-grow"
+            className="border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="password"
-            {...register("password", {
+            {...register("password" as FieldPath<T>, {
               required: "Password is required",
               minLength: {
                 value: 6,
@@ -101,22 +113,54 @@ const UserForm: React.FC<IUserFormProps> = ({
               },
             })}
           />
-          {errors.password && (
-            <p className="errorInputs sm:text-md">{errors.password.message}</p>
+          {errors["password" as FieldPath<T>] && (
+            <p className="text-sm text-red-600 mt-1">
+              {String(errors["password" as FieldPath<T>]?.message)}
+            </p>
           )}
         </div>
 
+        {/* Roles field (only for signup or edit-user) */}
+        {(isEditMode || buttonType === "Signup") && (
+          <div className="flex flex-col">
+            <label
+              className="text-sm font-medium text-gray-700 mb-1"
+              htmlFor="roles"
+            >
+              Roles
+            </label>
+            <div className="flex flex-wrap gap-4">
+              {["Admin", "User", "Editor"].map((role) => (
+                <label key={role} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    value={role}
+                    {...register("roles" as FieldPath<T>)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-gray-700">{role}</span>
+                </label>
+              ))}
+            </div>
+            {errors["roles" as FieldPath<T>] && (
+              <p className="text-sm text-red-600 mt-1">
+                {String(errors["roles" as FieldPath<T>]?.message)}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Buttons */}
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <button
-            className="shadow-md text-white w-40 text-center justify-center px-6 py-1 hover:shadow-xl bg-green-700 hover:scale-105 transition transform duration-200 ease-out rounded-lg"
+            className="w-40 bg-blue-600 text-white font-medium py-2 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 cursor-pointer"
             disabled={!isValid}
             type="submit"
           >
             {buttonType}
           </button>
           <button
-            className="shadow-md text-white w-40 text-center justify-center px-6 py-1 hover:shadow-xl bg-red-800 hover:scale-105 transition transform duration-200 ease-out rounded-lg"
+            className="w-40 bg-gray-300 text-gray-700 font-medium py-2 rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition duration-200 cursor-pointer"
             type="button"
             onClick={() => navigate("/")}
           >
@@ -124,6 +168,16 @@ const UserForm: React.FC<IUserFormProps> = ({
           </button>
         </div>
       </form>
+      {buttonType === "Login" && (
+        <div className="flex items-center mt-10 gap-4 justify-center">
+          <p className="text-gray-400">Doesn't have an account?</p>
+          <Link to="/signup">
+            <button className="text-blue-600 hover:underline font-bold cursor-pointer">
+              Sign Up
+            </button>
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

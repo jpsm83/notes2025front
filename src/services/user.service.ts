@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
-import { IUser } from "../interfaces/user";
+import { IEditUserFields, ISignupFields } from "../interfaces/user";
 
 export default class UserService {
   private instance: AxiosInstance;
@@ -12,12 +12,12 @@ export default class UserService {
   }
 
   // Signup method
-  signup = (data: IUser): Promise<AxiosResponse<IUser>> => {
-    return this.instance.post<IUser>("/", data);
+  signup = (data: ISignupFields): Promise<AxiosResponse<ISignupFields>> => {
+    return this.instance.post<ISignupFields>("/", data);
   };
 
   // Edit user details
-  updateUser = (id: string, data: IUser): Promise<AxiosResponse<IUser>> => {
-    return this.instance.patch<IUser>(`/${id}`, data);
+  updateUser = (id: string, data: IEditUserFields): Promise<AxiosResponse<IEditUserFields>> => {
+    return this.instance.patch<IEditUserFields>(`/${id}`, data);
   };
 }

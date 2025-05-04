@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAuth } from "../context/auth.context";
-import { useNavigate } from "react-router-dom";
 
 // interfaces
 import { INote } from "../interfaces/note";
@@ -13,17 +12,9 @@ const Home: React.FC = () => {
   const [notes, setNotes] = useState<INote[]>([]);
   const { user } = useAuth();
   const noteService = useMemo(() => new NoteService(), []);
-  const navigate = useNavigate();
 
   console.log("User in Home:", user);
   console.log("Notes in Home:", notes);
-
-  // Redirect to login if no user is logged in
-  useEffect(() => {
-    if (!user) {
-      navigate("/login");
-    }
-  }, [user, navigate]);
 
   // Fetch notes from the backend
   const refreshState = useCallback(async () => {
@@ -31,7 +22,9 @@ const Home: React.FC = () => {
       const response = await noteService.getNotes();
       const validNotes = response.data.filter(
         (note: INote) =>
-          note.dueDate && !isNaN(new Date(note.dueDate).getTime()) && note.userId
+          note.dueDate &&
+          !isNaN(new Date(note.dueDate).getTime()) &&
+          note.userId
       ); // Filter out invalid notes
       setNotes(validNotes); // Set only valid notes
     } catch (error) {
@@ -64,9 +57,17 @@ const Home: React.FC = () => {
 
   return (
     <div>
-      <div className="flex flex-col justify-center items-center m-5">
-        {displayNoteCards()}
-      </div>
+      {!user ? (
+        <div className="bg-gray-300 m-10 shadow-lg rounded-lg p-10">
+          <h2 className="text-center text-xl sm:text-3xl font-bold text-yellow-600">
+            Sign in and start to organize your agenda!
+          </h2>
+        </div>
+      ) : (
+        <div className="flex flex-col justify-center items-center m-5">
+          {displayNoteCards()}
+        </div>
+      )}
     </div>
   );
 };
