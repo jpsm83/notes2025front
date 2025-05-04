@@ -1,29 +1,24 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { SubmitHandler } from "react-hook-form";
-import AuthService from "../services/auth.service";
 import UserForm from "../components/UserForm";
 import { ILoginFields } from "../interfaces/user";
+import { useAuth } from "../context/auth.context";
+import { toast } from "react-toastify";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const authService = new AuthService();
+  const { login } = useAuth();
 
   const handleLogin: SubmitHandler<ILoginFields> = async (data) => {
-    try {
-      await authService.login(data);
-      navigate("/");
-    } catch (error) {
-      console.error("Error during login:", error);
+    const { success, error } = await login(data);
+    if (!success && error) {
+      toast.warn(error);
+      return;
     }
+    navigate("/");
   };
 
-  return (
-    <UserForm<ILoginFields>
-      onSubmit={handleLogin}
-      buttonType="Login"
-    />
-  );
+  return <UserForm<ILoginFields> onSubmit={handleLogin} buttonType="Login" />;
 };
 
 export default Login;

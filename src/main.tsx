@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/auth.context";
 import "./index.css";
+import { ErrorBoundary } from "react-error-boundary";
 
 // authRoutes
 import PrivateRoute from "./authRoutes/PrivateRoute.tsx";
@@ -18,6 +19,7 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import EditUser from "./pages/EditUser";
 import NotFoundPage from "./pages/NotFoundPage.tsx";
+import { ToastContainer, Slide } from "react-toastify";
 
 const router = createBrowserRouter([
   {
@@ -68,12 +70,26 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    {/* <ToastContainer /> */}
     {/* AuthProvider comes from context and wrap the application
     it allows the app to use all its functions in any component-
     isLoading, isLoggedin, user, signup, login, logout, edit */}
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <ErrorBoundary fallback={<div>Something went wrong</div>}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </ErrorBoundary>
+    <ToastContainer
+      position="bottom-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="light"
+      transition={Slide}
+    />{" "}
   </StrictMode>
 );

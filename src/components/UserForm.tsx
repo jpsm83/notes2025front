@@ -6,6 +6,7 @@ import {
   DefaultValues,
 } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
+import { roles } from "../utils/enums";
 
 interface IUserFormProps<T extends FieldValues> {
   onSubmit: SubmitHandler<T>;
@@ -26,13 +27,13 @@ const UserForm = <T extends FieldValues>({
     formState: { errors, isValid },
   } = useForm<T>({
     defaultValues: defaultValues as DefaultValues<T>,
-    mode: "onChange",
+    mode: "onTouched",
   });
-
+  
   const navigate = useNavigate();
 
   return (
-    <div className="flex w-full max-w-lg mx-auto flex-col bg-white shadow-lg rounded-lg p-8 m-8">
+    <div className="flex w-full max-w-lg mx-auto flex-col bg-white shadow-lg rounded-lg p-8 m-8 border-1 border-gray-300">
       <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
         {isEditMode ? "Edit User" : buttonType === "Login" ? "Login" : "Signup"}
       </h2>
@@ -59,6 +60,11 @@ const UserForm = <T extends FieldValues>({
                   message: "Username must be at least 5 characters",
                 },
               })}
+              defaultValue={
+                defaultValues.username
+                  ? String(defaultValues.username)
+                  : undefined
+              }
             />
             {errors["username" as FieldPath<T>] && (
               <p className="text-sm text-red-600 mt-1">
@@ -86,6 +92,9 @@ const UserForm = <T extends FieldValues>({
                 message: "Invalid email address",
               },
             })}
+            defaultValue={
+              defaultValues.email ? String(defaultValues.email) : undefined
+            }
           />
           {errors["email" as FieldPath<T>] && (
             <p className="text-sm text-red-600 mt-1">
@@ -130,7 +139,7 @@ const UserForm = <T extends FieldValues>({
               Roles
             </label>
             <div className="flex flex-wrap gap-4">
-              {["Admin", "User", "Editor"].map((role) => (
+              {roles.map((role) => (
                 <label key={role} className="flex items-center space-x-2">
                   <input
                     type="checkbox"

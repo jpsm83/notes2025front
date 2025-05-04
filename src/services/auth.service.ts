@@ -1,7 +1,6 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
-import { IUser } from "../interfaces/user";
-
-import { ILoginFields } from "../interfaces/user";
+import axios, { AxiosInstance } from "axios";
+import { IUser, ILoginFields } from "../interfaces/user";
+import { handleError } from "../utils/handleError";
 
 export default class AuthService {
   private instance: AxiosInstance;
@@ -14,57 +13,45 @@ export default class AuthService {
   }
 
   // Login method
-  login = async (data: ILoginFields): Promise<AxiosResponse<IUser>> => {
-    const response = await this.instance.post<IUser>("/", data);
-    const token = response.data.accessToken; // Extract the accessToken
-    if (token) {
-      localStorage.setItem("jwt", token); // Save the token in localStorage
+  async login(data: ILoginFields): Promise<{ user: IUser; accessToken: string }> {
+    try {
+      const response = await this.instance.post<{ user: IUser; accessToken: string }>("/", data);
+
+      const { accessToken, user } = response.data;
+
+      if (accessToken) {
+        localStorage.setItem("jwt", accessToken); // Save the token in localStorage
+      }
+
+      return { user, accessToken };
+    } catch (error) {
+      throw handleError(error); // Handle and rethrow the error
     }
-    return response;
-  };
+  }
 
   // Logout method
-  logout = (): Promise<AxiosResponse<void>> => {
-    localStorage.removeItem("jwt"); // Remove the token from localStorage on logout
-    return this.instance.post<void>("/logout");
-  };
-
-  // Check if the user is logged in
-  isLoggedIn = async (): Promise<IUser | null> => {
+  async logout(): Promise<void> {
     try {
-      const response = await this.instance.get<{
-        accessToken: string;
-        user: IUser;
-      }>("/refresh");
+      await this.instance.post<void>("/logout");
+      localStorage.removeItem("jwt"); // Remove the token from localStorage
+    } catch (error) {
+      throw handleError(error); // Handle and throw the error
+    }
+  }
 
+  // Refresh token and get user info
+  async refresh(): Promise<{ user: IUser; accessToken: string }> {
+    try {
+      const response = await this.instance.get<{ user: IUser; accessToken: string }>("/refresh");
       const { accessToken, user } = response.data;
 
       if (accessToken) {
         localStorage.setItem("jwt", accessToken); // Save the refreshed token in localStorage
       }
 
-      return user; // Return the user object directly from the response
+      return { user, accessToken };
     } catch (error) {
-      console.error("Error refreshing token:", error);
-      return null; // Return null if the token is invalid or expired
-    }
-  };
-
-  // Optional helper
-  decodeUser(token: string): IUser | null {
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      return {
-        _id: payload.UserInfo._id,
-        username: payload.UserInfo.username,
-        email: payload.UserInfo.email,
-        roles: payload.UserInfo.roles,
-        image: payload.UserInfo.image,
-        accessToken: token,
-      };
-    } catch (e) {
-      console.error("Failed to decode JWT", e);
-      return null;
+      throw handleError(error); // Handle and throw the error
     }
   }
 }

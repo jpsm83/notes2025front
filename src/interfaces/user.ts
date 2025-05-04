@@ -5,7 +5,6 @@ export interface IUser {
   roles: string[];
   password?: string;
   image: string;
-  accessToken: string;
 }
 
 export interface ISignupFields {

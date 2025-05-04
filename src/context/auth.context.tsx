@@ -7,76 +7,88 @@ import React, {
   ReactNode,
 } from "react";
 import AuthService from "../services/auth.service";
-import { ILoginFields, IUser } from "../interfaces/user";
+import UserService from "../services/user.service";
+import { ILoginFields, ISignupFields, IUser } from "../interfaces/user";
 
-interface AuthContextType {
+interface IAuthContext {
   isLoading: boolean;
   isLoggedin: boolean;
   user: IUser | null;
-  login: (data: ILoginFields) => Promise<void>;
+  login: (data: ILoginFields) => Promise<{ success: boolean; error?: string }>;
+  signup: (
+    data: ISignupFields
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<IAuthContext | undefined>(undefined);
 
-interface AuthProviderProps {
+interface IAuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedin, setIsLoggedin] = useState(false);
   const [user, setUser] = useState<IUser | null>(null);
 
   const authService = new AuthService();
+  const userService = new UserService();
+  let refreshTokenInterval: NodeJS.Timeout | null = null;
 
-  useEffect(() => {
-    let refreshTokenInterval: NodeJS.Timeout;
-
-    const setupRefreshToken = () => {
-      refreshTokenInterval = setInterval(async () => {
-        try {
-          const loggedInUser = await authService.isLoggedIn();
-          if (loggedInUser) {
-            setIsLoggedin(true);
-            setUser(loggedInUser);
-          } else {
-            setIsLoggedin(false);
-            setUser(null);
-          }
-        } catch (error) {
-          console.error("Error refreshing token:", error);
-          setIsLoggedin(false);
-          setUser(null);
-        }
-      }, 12 * 60 * 1000); // Refresh every 12 minutes
-    };
-
-    if (!isLoading && isLoggedin) {
-      setupRefreshToken();
+  //Handles token refresh and updates the user state.
+  const refreshToken = useCallback(async () => {
+    try {
+      const { user } = await authService.refresh();
+      setIsLoggedin(true);
+      setUser(user);
+    } catch (error) {
+      console.error("Refresh error:", (error as Error).message);
+      setIsLoggedin(false);
+      setUser(null);
+      stopAutoRefresh(); // Stop auto-refresh on failure
     }
+  }, []);
 
-    return () => {
+  // Starts the auto-refresh mechanism based on the token expiration time.
+  // param expiresIn - Time in seconds until the token expires.
+  const startAutoRefresh = useCallback(
+    (expiresIn: number) => {
       if (refreshTokenInterval) {
         clearInterval(refreshTokenInterval);
       }
-    };
-  }, [isLoading, isLoggedin]);
 
-  // Check login status on component mount
+      // Refresh the token 1 minute before it expires
+      const refreshInterval = (expiresIn - 60) * 1000;
+      refreshTokenInterval = setInterval(() => {
+        refreshToken();
+      }, refreshInterval);
+    },
+    [refreshToken]
+  );
+
+  // Stops the auto-refresh mechanism.
+  const stopAutoRefresh = useCallback(() => {
+    if (refreshTokenInterval) {
+      clearInterval(refreshTokenInterval);
+      refreshTokenInterval = null;
+    }
+  }, []);
+
+  //Checks the login status on app initialization.
   useEffect(() => {
-    const checkLoginStatus = async () => {
+    const initializeAuth = async () => {
       try {
-        const loggedInUser = await authService.isLoggedIn();
-        if (loggedInUser) {
-          setIsLoggedin(true);
-          setUser(loggedInUser);
-        } else {
-          setIsLoggedin(false);
-          setUser(null);
-        }
+        const { user, accessToken } = await authService.refresh();
+        setIsLoggedin(true);
+        setUser(user);
+
+        // Assume the backend provides the token expiration time in seconds
+        const tokenPayload = JSON.parse(atob(accessToken.split(".")[1]));
+        const expiresIn = tokenPayload.exp - Math.floor(Date.now() / 1000);
+        startAutoRefresh(expiresIn);
       } catch (error) {
-        console.error("Error checking login status:", error);
+        console.error("Initial auth error:", (error as Error).message);
         setIsLoggedin(false);
         setUser(null);
       } finally {
@@ -84,42 +96,83 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    checkLoginStatus();
-  }, []);
+    initializeAuth();
 
-  // Login function
-  const login = useCallback(async (data: ILoginFields) => {
-    try {
-      const response = await authService.login(data);
-      const token = response.data.accessToken;
-      if (token) {
-        localStorage.setItem("jwt", token);
-        const user = authService.decodeUser(token);
+    return () => {
+      stopAutoRefresh(); // Cleanup on unmount
+    };
+  }, [startAutoRefresh, stopAutoRefresh]);
+
+  // Handles user login.
+  const login = useCallback(
+    async (
+      data: ILoginFields
+    ): Promise<{ success: boolean; error?: string }> => {
+      try {
+        const { user, accessToken } = await authService.login(data);
         setIsLoggedin(true);
         setUser(user);
-      }
-    } catch (error) {
-      console.error("Error during login:", error);
-      setIsLoggedin(false);
-      setUser(null);
-    }
-  }, []);
 
-  // Logout function
+        const tokenPayload = JSON.parse(atob(accessToken.split(".")[1]));
+        const expiresIn = tokenPayload.exp - Math.floor(Date.now() / 1000);
+        startAutoRefresh(expiresIn);
+        return { success: true };
+      } catch (error) {
+        const message = (error as Error).message || "Login failed";
+        console.error("Login error:", message);
+        setIsLoggedin(false);
+        setUser(null);
+        return { success: false, error: message };
+      }
+    },
+    [startAutoRefresh]
+  );
+
+  //Handles user signup.
+  const signup = useCallback(
+    async (
+      data: ISignupFields
+    ): Promise<{ success: boolean; error?: string }> => {
+      try {
+        const { user, accessToken } = await userService.signup(data);
+        setIsLoggedin(true);
+        setUser(user);
+
+        const tokenPayload = JSON.parse(atob(accessToken.split(".")[1]));
+        const expiresIn = tokenPayload.exp - Math.floor(Date.now() / 1000);
+        startAutoRefresh(expiresIn);
+
+        return { success: true };
+      } catch (error) {
+        const message = (error as Error).message || "Signup failed";
+        console.error("Signup error:", message);
+        setIsLoggedin(false);
+        setUser(null);
+        return { success: false, error: message };
+      }
+    },
+    [startAutoRefresh]
+  );
+
+  // Handles user logout.
   const logout = useCallback(async () => {
     try {
       await authService.logout();
-    } finally {
       setIsLoggedin(false);
       setUser(null);
+      stopAutoRefresh();
+    } catch (error) {
+      const message = (error as Error).message;
+      console.error("Logout error:", message);
     }
-  }, []);
+  }, [stopAutoRefresh]);
 
-  const value: AuthContextType = {
+  const value: IAuthContext = {
     isLoading,
     isLoggedin,
     user,
     login,
+    signup,
     logout,
   };
 
@@ -130,7 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = (): IAuthContext => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
