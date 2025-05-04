@@ -14,6 +14,7 @@ interface IAuthContext {
   isLoading: boolean;
   isLoggedin: boolean;
   user: IUser | null;
+  errorAuth: string | null;
   login: (data: ILoginFields) => Promise<{ success: boolean; error?: string }>;
   signup: (
     data: ISignupFields
@@ -31,6 +32,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedin, setIsLoggedin] = useState(false);
   const [user, setUser] = useState<IUser | null>(null);
+  const [errorAuth, setErrorAuth] = useState<string | null>(null);
 
   const authService = new AuthService();
   const userService = new UserService();
@@ -43,7 +45,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
       setIsLoggedin(true);
       setUser(user);
     } catch (error) {
-      console.error("Refresh error:", (error as Error).message);
+      setErrorAuth((error as Error).message);
       setIsLoggedin(false);
       setUser(null);
       stopAutoRefresh(); // Stop auto-refresh on failure
@@ -88,7 +90,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
         const expiresIn = tokenPayload.exp - Math.floor(Date.now() / 1000);
         startAutoRefresh(expiresIn);
       } catch (error) {
-        console.error("Initial auth error:", (error as Error).message);
+        setErrorAuth((error as Error).message);
         setIsLoggedin(false);
         setUser(null);
       } finally {
@@ -171,6 +173,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     isLoading,
     isLoggedin,
     user,
+    errorAuth,
     login,
     signup,
     logout,

@@ -1,4 +1,7 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import axios, { AxiosInstance } from "axios";
+import { handleError } from "../utils/handleError";
+
+// interfaces
 import { INote } from "../interfaces/note";
 
 export default class NoteService {
@@ -19,34 +22,44 @@ export default class NoteService {
         }
         return config;
       },
-      (error) => {
-        return Promise.reject(error);
-      }
+      (error) => Promise.reject(error) // Reject the promise on request error
     );
   }
 
   // Create a new note
-  createNote = (data: INote): Promise<AxiosResponse<INote>> => {
-    return this.instance.post<INote>("/", data);
-  };
+  async createNote(data: INote): Promise<INote> {
+    return this.handleRequest(() => this.instance.post<INote>("/", data));
+  }
 
   // Get all notes
-  getNotes = (): Promise<AxiosResponse<INote[]>> => {
-    return this.instance.get<INote[]>("/");
-  };
+  async getNotes(): Promise<INote[]> {
+    return this.handleRequest(() => this.instance.get<INote[]>("/"));
+  }
 
   // Get a single note by ID
-  getNote = (id: string): Promise<AxiosResponse<INote>> => {
-    return this.instance.get<INote>(`/${id}`);
-  };
+  async getNote(id: string): Promise<INote> {
+    return this.handleRequest(() => this.instance.get<INote>(`/${id}`));
+  }
 
   // Delete a note by ID
-  deleteNote = (id: string): Promise<AxiosResponse<void>> => {
-    return this.instance.delete<void>(`/${id}`);
-  };
+  async deleteNote(id: string): Promise<void> {
+    await this.handleRequest(() => this.instance.delete<void>(`/${id}`));
+  }
 
   // Update a note by ID
-  updateNote = (id: string, data: INote): Promise<AxiosResponse<INote>> => {
-    return this.instance.patch<INote>(`/${id}`, data);
-  };
+  async updateNote(id: string, data: INote): Promise<INote> {
+    return this.handleRequest(() => this.instance.patch<INote>(`/${id}`, data));
+  }
+
+  //Helper method to handle API requests
+  private async handleRequest<T>(
+    requestFn: () => Promise<{ data: T }>
+  ): Promise<T> {
+    try {
+      const response = await requestFn();
+      return response.data;
+    } catch (error) {
+      throw handleError(error); // Handle and throw the error
+    }
+  }
 }

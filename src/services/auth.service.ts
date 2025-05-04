@@ -1,5 +1,9 @@
 import axios, { AxiosInstance } from "axios";
+
+// interfaces
 import { IUser, ILoginFields } from "../interfaces/user";
+
+// utils
 import { handleError } from "../utils/handleError";
 
 export default class AuthService {
@@ -13,9 +17,14 @@ export default class AuthService {
   }
 
   // Login method
-  async login(data: ILoginFields): Promise<{ user: IUser; accessToken: string }> {
+  async login(
+    data: ILoginFields
+  ): Promise<{ user: IUser; accessToken: string }> {
     try {
-      const response = await this.instance.post<{ user: IUser; accessToken: string }>("/", data);
+      const response = await this.instance.post<{
+        user: IUser;
+        accessToken: string;
+      }>("/", data);
 
       const { accessToken, user } = response.data;
 
@@ -42,7 +51,10 @@ export default class AuthService {
   // Refresh token and get user info
   async refresh(): Promise<{ user: IUser; accessToken: string }> {
     try {
-      const response = await this.instance.get<{ user: IUser; accessToken: string }>("/refresh");
+      const response = await this.instance.get<{
+        user: IUser;
+        accessToken: string;
+      }>("/refresh");
       const { accessToken, user } = response.data;
 
       if (accessToken) {

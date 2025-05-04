@@ -39,12 +39,12 @@ const router = createBrowserRouter([
         children: [{ index: true, element: <Login /> }],
       },
       {
-        path: "editUser",
+        path: "edit-user",
         element: <PrivateRoute />, // PrivateRoute wraps the EditUser page
         children: [{ index: true, element: <EditUser /> }],
       },
       {
-        path: "createNote",
+        path: "create-note",
         element: <PrivateRoute />, // PrivateRoute wraps the CreateNote page
         children: [{ index: true, element: <CreateNote /> }],
       },

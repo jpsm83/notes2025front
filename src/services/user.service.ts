@@ -1,5 +1,9 @@
 import axios, { AxiosInstance } from "axios";
+
+// interfaces
 import { IEditUserFields, ISignupFields, IUser } from "../interfaces/user";
+
+// utils
 import { handleError } from "../utils/handleError";
 
 export default class UserService {
