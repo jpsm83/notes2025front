@@ -168,12 +168,6 @@ const UserForm = <T extends FieldValues>({
             </div>
             {buttonType !== "Signup" && (
               <div className="flex flex-col">
-                <label
-                  className="text-sm font-medium text-gray-700 mb-1"
-                  htmlFor="active"
-                >
-                  Active
-                </label>
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"

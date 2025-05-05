@@ -1,114 +1,160 @@
-import React from "react";
+import {
+  useForm,
+  SubmitHandler,
+  FieldPath,
+  FieldValues,
+  DefaultValues,
+} from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { useForm, SubmitHandler } from "react-hook-form";
 
-// Define the form fields
-interface INoteFormFields {
-  dueDate: string;
-  title: string;
-  description: string;
-}
-
-interface INoteFormProps {
-  onSubmit: SubmitHandler<INoteFormFields>;
+interface INoteFormProps<T extends FieldValues> {
+  onSubmit: SubmitHandler<T>;
   buttonType: string;
-  defaultValues?: Partial<INoteFormFields>; // Default values for the form
+  isEditMode?: boolean;
+  defaultValues?: Partial<T>;
 }
 
-const NoteForm: React.FC<INoteFormProps> = ({
+const NoteForm = <T extends FieldValues>({
   onSubmit,
   buttonType,
+  isEditMode = false,
   defaultValues = {},
-}) => {
+}: INoteFormProps<T>) => {
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<INoteFormFields>({
-    defaultValues,
-    mode: "onChange", // Enables validation on change
+  } = useForm<T>({
+    defaultValues: defaultValues as DefaultValues<T>,
+    mode: "onTouched",
   });
 
   const navigate = useNavigate();
 
   return (
-    <div className="flex w-full flex-col bg-blue-200 m-10 shadow-lg space-y-4 rounded-lg p-5">
+    <div className="flex w-full max-w-lg mx-auto flex-col bg-white shadow-lg rounded-lg p-8 m-8 border-1 border-gray-300">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+        {isEditMode ? "Edit Note" : "Create Note"}
+      </h2>
       <form
-        className="flex flex-col p-5 space-y-3 bg-gray-100 rounded-lg"
-        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col space-y-6"
+        onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}
       >
         {/* Due Date Field */}
-        <div className="flex justify-end">
-          <label className="font-bold text-yellow-800" htmlFor="dueDate">
+        <div className="flex flex-col">
+          <label
+            className="text-sm font-medium text-gray-700 mb-1"
+            htmlFor="dueDate"
+          >
+            {" "}
             Date:
           </label>
           <input
-            className="text-yellow-800 outline-0 ml-2 rounded-lg px-2"
+            className="border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="date"
-            {...register("dueDate", {
+            {...register("dueDate" as FieldPath<T>, {
               required: "Due date is required",
             })}
+            defaultValue={
+              defaultValues.dueDate ? String(defaultValues.dueDate) : undefined
+            }
           />
-          {errors.dueDate && (
-            <p className="errorInputs sm:text-md">{errors.dueDate.message}</p>
+          {errors["dueDate" as FieldPath<T>] && (
+            <p className="text-sm text-red-600 mt-1">
+              {String(errors["dueDate" as FieldPath<T>]?.message)}
+            </p>
           )}
         </div>
 
         {/* Title Field */}
-        <div className="flex justify-start w-full">
-          <label className="font-bold text-yellow-800" htmlFor="title">
-            Title:
+        <div className="flex flex-col">
+          <label
+            className="text-sm font-medium text-gray-700 mb-1"
+            htmlFor="title"
+          >
+            Title
           </label>
           <input
-            className="text-yellow-800 ml-2 outline-0 rounded-lg px-2 flex-grow"
+            className="border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="text"
-            {...register("title", {
+            {...register("title" as FieldPath<T>, {
               required: "Title is required",
-              minLength: {
-                value: 3,
-                message: "Title must be at least 3 characters",
+              maxLength: {
+                value: 40,
+                message: "Title must be max of 40 characters long",
               },
             })}
+            defaultValue={
+              defaultValues.title ? String(defaultValues.title) : undefined
+            }
           />
-          {errors.title && (
-            <p className="errorInputs sm:text-md">{errors.title.message}</p>
+          {errors["title" as FieldPath<T>] && (
+            <p className="text-sm text-red-600 mt-1">
+              {String(errors["title" as FieldPath<T>]?.message)}
+            </p>
           )}
         </div>
 
         {/* Description Field */}
-        <div className="flex justify-start w-full">
-          <label className="font-bold text-yellow-800" htmlFor="description">
-            Description:
+        <div className="flex flex-col">
+          <label
+            className="text-sm font-medium text-gray-700 mb-1"
+            htmlFor="description"
+          >
+            Description
           </label>
           <input
-            className="text-yellow-800 ml-2 outline-0 rounded-lg px-2 flex-grow"
+            className="border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="text"
-            {...register("description", {
-              required: "Description is required",
-              minLength: {
-                value: 5,
-                message: "Description must be at least 5 characters",
+            {...register("description" as FieldPath<T>, {
+              required: "description is required",
+              maxLength: {
+                value: 200,
+                message: "Description must be max of 200 characters long",
               },
             })}
+            defaultValue={
+              defaultValues.description
+                ? String(defaultValues.description)
+                : undefined
+            }
           />
-          {errors.description && (
-            <p className="errorInputs sm:text-md">
-              {errors.description.message}
+          {errors["description" as FieldPath<T>] && (
+            <p className="text-sm text-red-600 mt-1">
+              {String(errors["description" as FieldPath<T>]?.message)}
+            </p>
+          )}
+        </div>
+
+        {/* Priority Field */}
+        <div className="flex flex-col">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              {...register("priority" as FieldPath<T>)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              defaultChecked={defaultValues.priority} // Use defaultChecked for initial state
+            />
+            <span className="text-gray-700">Priority</span>
+          </div>
+          {errors["priority" as FieldPath<T>] && (
+            <p className="text-sm text-red-600 mt-1">
+              {String(errors["priority" as FieldPath<T>]?.message)}
             </p>
           )}
         </div>
 
         {/* Buttons */}
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <button
-            className="shadow-md text-white w-40 text-center justify-center px-6 py-1 hover:shadow-xl bg-green-700 hover:scale-105 transition transform duration-200 ease-out rounded-lg"
+            className="w-40 bg-blue-600 text-white font-medium py-2 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 cursor-pointer"
             disabled={!isValid}
             type="submit"
           >
             {buttonType}
           </button>
           <button
-            className="shadow-md text-white w-40 text-center justify-center px-6 py-1 hover:shadow-xl bg-red-800 hover:scale-105 transition transform duration-200 ease-out rounded-lg"
+            className="w-40 bg-gray-300 text-gray-700 font-medium py-2 rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition duration-200 cursor-pointer"
             type="button"
             onClick={() => navigate("/")}
           >

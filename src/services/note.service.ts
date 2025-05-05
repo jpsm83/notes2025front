@@ -41,6 +41,11 @@ export default class NoteService {
     return this.handleRequest(() => this.instance.get<INote>(`/${id}`));
   }
 
+  // Get a single note by ID
+  async getNoteByUserId(id: string): Promise<INote> {
+    return this.handleRequest(() => this.instance.get<INote>(`/user/${id}`));
+  }
+
   // Delete a note by ID
   async deleteNote(id: string): Promise<void> {
     await this.handleRequest(() => this.instance.delete<void>(`/${id}`));

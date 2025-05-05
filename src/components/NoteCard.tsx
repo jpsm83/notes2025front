@@ -13,7 +13,6 @@ interface INoteCardProps {
   completed: boolean;
   priority: boolean;
   dueDate: string;
-  refreshState: () => void;
 }
 
 const NoteCard: React.FC<INoteCardProps> = ({
@@ -22,15 +21,14 @@ const NoteCard: React.FC<INoteCardProps> = ({
   completed,
   priority,
   dueDate,
-  refreshState,
 }) => {
   const noteService = new NoteService();
   const navigate = useNavigate();
 
   // Delete a note
-  const deleteNote = async () => {
+  const noteCompleted = async () => {
     try {
-      await noteService.deleteOne(_id);
+      await noteService.updateNote(_id);
       refreshState();
     } catch (error) {
       console.error("Error deleting note:", error);
@@ -105,7 +103,7 @@ const NoteCard: React.FC<INoteCardProps> = ({
           {completed && (
             <button
               className="shadow-md items-center text-white text-center justify-center px-6 hover:shadow-xl bg-red-700 hover:scale-105 transition transform duration-200 ease-out rounded-lg"
-              onClick={deleteNote}
+              onClick={noteCompleted}
             >
               Delete
             </button>

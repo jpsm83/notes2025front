@@ -13,46 +13,37 @@ const Home: React.FC = () => {
   const { user } = useAuth();
   const noteService = useMemo(() => new NoteService(), []);
 
-  console.log("User in Home:", user);
-  console.log("Notes in Home:", notes);
-
-  // Fetch notes from the backend
-  const refreshState = useCallback(async () => {
+  // get notes from the backend
+  const getUserNotes = useCallback(async () => {
+    if (!user) return; // If user is not logged in, do not fetch notes
     try {
-      const response = await noteService.getNotes();
-      const validNotes = response.data.filter(
-        (note: INote) =>
-          note.dueDate &&
-          !isNaN(new Date(note.dueDate).getTime()) &&
-          note.userId
-      ); // Filter out invalid notes
-      setNotes(validNotes); // Set only valid notes
+      const response = await noteService.getNoteByUserId(user?._id);
+      setNotes(Array.isArray(response) ? response : [response]); // Ensure response is an array
     } catch (error) {
       console.error("Error fetching notes:", error);
     }
   }, [noteService]);
 
+  console.log(notes);
+
   // Fetch notes when the component mounts
   useEffect(() => {
     if (user) {
-      refreshState();
+      getUserNotes();
+    } else {
+      setNotes([]); // Clear notes if user is not logged in
     }
-  }, [refreshState, user]);
+  }, [user, getUserNotes]);
 
   // Display note cards for the logged-in user
   const displayNoteCards = () => {
-    if (!user) return null;
+    if (!notes) return null;
 
-    const userId = user._id;
-    const organizedNotes = [...notes]
-      .filter((note) => note.userId === userId) // Filter notes for the logged-in user
-      .sort(
-        (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
-      ); // Sort notes by due date
+    const organizedNotes = [...notes].sort(
+      (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+    ); // Sort notes by due date
 
-    return organizedNotes.map((note) => (
-      <NoteCard key={note._id} {...note} refreshState={refreshState} />
-    ));
+    return organizedNotes.map((note) => <NoteCard key={note._id} {...note} />);
   };
 
   return (
