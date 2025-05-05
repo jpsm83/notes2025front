@@ -1,64 +1,68 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
-// imported hooks
+// interfaces
+import { IEditUserFields } from "../interfaces/user";
+
+// hooks
 import { useAuth } from "../context/auth.context";
 
-// imported components
+// components
 import UserForm from "../components/UserForm";
-import { IUserFormFields } from "../components/UserForm";
+
+// services
+import UserService from "../services/user.service";
+import { toast } from "react-toastify";
 
 const EditUser: React.FC = () => {
-  const { user, edit } = useAuth(); // Access user and edit from the auth context
-  const [defaultValues, setDefaultValues] = useState({
-    username: "",
-    email: "",
-    password: "",
-    image: "",
-  });
-  const [loading, setLoading] = useState(true);
+  const { isLoggedin, user, setUser } = useAuth(); // Access user and edit from the auth context
+  const userService = new UserService();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user) {
-      // Populate default values with user data
-      setDefaultValues({
-        username: user.username || "",
-        email: user.email || "",
-        password: "", // Password should be empty for security reasons
-        image: user.image || "",
-      });
-      setLoading(false);
-    }
-  }, [user]);
+  const defaultValues = {
+    username: user?.username || "",
+    email: user?.email || "",
+    password: "",
+    roles: user?.roles || [],
+    active: user?.active !== undefined ? user?.active : false,
+  };
 
-  const handleUpdateUser: SubmitHandler<IUserFormFields> = async (data: {
-    username: string;
-    email: string;
-    password: string;
-  }) => {
+  useEffect(() => {
+    if (!isLoggedin || !user) {
+      navigate("/login"); // Redirect to login if not logged in
+    }
+  }, [isLoggedin, navigate]);
+
+  console.log("user", user);
+
+  const handleUpdateUser: SubmitHandler<IEditUserFields> = async (data) => {
     try {
-      await edit(data); // Call the edit method from the auth context
-      navigate("/"); // Redirect to the home page after successful update
+      if (!user?._id) {
+        toast.error("User ID is missing");
+        return;
+      }
+      const { success, error } = await userService.updateUser(user._id, data);
+      if (!success && error) {
+        toast.warn(error);
+        return;
+      }
+      // Update the user in the context
+      setUser((prevUser) => (prevUser ? { ...prevUser, ...data } : null));
+      toast.success("User updated successfully");
+      navigate("/");
     } catch (error) {
-      console.error("Error updating user:", error);
+      toast.error(`Update failed, error: ${error}`);
     }
   };
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-
   return (
-    <div className="flex justify-center">
-      <UserForm
-        onSubmit={handleUpdateUser}
-        buttonType="Update"
-        isEditMode={true}
-        defaultValues={defaultValues}
-      />
-    </div>
+    <UserForm
+      onSubmit={handleUpdateUser}
+      buttonType="Update"
+      isEditMode={true}
+      defaultValues={defaultValues}
+    />
   );
 };
 

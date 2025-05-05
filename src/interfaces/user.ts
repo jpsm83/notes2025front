@@ -5,6 +5,8 @@ export interface IUser {
   roles: string[];
   password?: string;
   image: string;
+  active: boolean;
+  myNotes: string[];
 }
 
 export interface ISignupFields {
@@ -24,4 +26,5 @@ export interface IEditUserFields {
   email: string;
   roles: string[];
   password: string;
+  active: boolean;
 }

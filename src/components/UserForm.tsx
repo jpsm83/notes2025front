@@ -6,6 +6,8 @@ import {
   DefaultValues,
 } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
+
+// utils
 import { roles } from "../utils/enums";
 
 interface IUserFormProps<T extends FieldValues> {
@@ -29,7 +31,7 @@ const UserForm = <T extends FieldValues>({
     defaultValues: defaultValues as DefaultValues<T>,
     mode: "onTouched",
   });
-  
+
   const navigate = useNavigate();
 
   return (
@@ -115,11 +117,17 @@ const UserForm = <T extends FieldValues>({
             className="border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="password"
             {...register("password" as FieldPath<T>, {
-              required: "Password is required",
-              minLength: {
-                value: 6,
-                message: "Password must be at least 6 characters",
-              },
+              required:
+                buttonType === "Login" || buttonType === "Signup"
+                  ? "Password is required"
+                  : false, // Not required for edit mode
+              minLength:
+                buttonType === "Login" || buttonType === "Signup"
+                  ? {
+                      value: 6,
+                      message: "Password must be at least 6 characters",
+                    }
+                  : undefined, // No minLength validation for edit mode
             })}
           />
           {errors["password" as FieldPath<T>] && (
@@ -131,30 +139,56 @@ const UserForm = <T extends FieldValues>({
 
         {/* Roles field (only for signup or edit-user) */}
         {(isEditMode || buttonType === "Signup") && (
-          <div className="flex flex-col">
-            <label
-              className="text-sm font-medium text-gray-700 mb-1"
-              htmlFor="roles"
-            >
-              Roles
-            </label>
-            <div className="flex flex-wrap gap-4">
-              {roles.map((role) => (
-                <label key={role} className="flex items-center space-x-2">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col">
+              <label
+                className="text-sm font-medium text-gray-700 mb-1"
+                htmlFor="roles"
+              >
+                Roles
+              </label>
+              <div className="flex flex-wrap gap-4">
+                {roles.map((role) => (
+                  <label key={role} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      value={role}
+                      {...register("roles" as FieldPath<T>)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="text-gray-700">{role}</span>
+                  </label>
+                ))}
+              </div>
+              {errors["roles" as FieldPath<T>] && (
+                <p className="text-sm text-red-600 mt-1">
+                  {String(errors["roles" as FieldPath<T>]?.message)}
+                </p>
+              )}
+            </div>
+            {buttonType !== "Signup" && (
+              <div className="flex flex-col">
+                <label
+                  className="text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="active"
+                >
+                  Active
+                </label>
+                <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    value={role}
-                    {...register("roles" as FieldPath<T>)}
+                    {...register("active" as FieldPath<T>)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    defaultChecked={defaultValues.active} // Use defaultChecked for initial state
                   />
-                  <span className="text-gray-700">{role}</span>
-                </label>
-              ))}
-            </div>
-            {errors["roles" as FieldPath<T>] && (
-              <p className="text-sm text-red-600 mt-1">
-                {String(errors["roles" as FieldPath<T>]?.message)}
-              </p>
+                  <span className="text-gray-700">Active</span>
+                </div>
+                {errors["active" as FieldPath<T>] && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {String(errors["active" as FieldPath<T>]?.message)}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}

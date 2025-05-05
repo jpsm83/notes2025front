@@ -15,6 +15,7 @@ interface IAuthContext {
   isLoggedin: boolean;
   user: IUser | null;
   errorAuth: string | null;
+  setUser: React.Dispatch<React.SetStateAction<IUser | null>>; // Expose setUser
   login: (data: ILoginFields) => Promise<{ success: boolean; error?: string }>;
   signup: (
     data: ISignupFields
@@ -173,6 +174,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     isLoading,
     isLoggedin,
     user,
+    setUser, // Expose setUser
     errorAuth,
     login,
     signup,

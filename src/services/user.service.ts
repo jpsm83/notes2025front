@@ -14,6 +14,18 @@ export default class UserService {
       baseURL: `${import.meta.env.VITE_API_URL}/api/v1/users`,
       withCredentials: true, // Ensures cookies are sent for CORS
     });
+
+    // Add an interceptor to include the Authorization header
+    this.instance.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem("jwt"); // Retrieve the JWT from localStorage
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`; // Add the token to the Authorization header
+        }
+        return config;
+      },
+      (error) => Promise.reject(error) // Reject the promise on request error
+    );
   }
 
   // Signup method
@@ -38,15 +50,17 @@ export default class UserService {
   }
 
   // Edit user details
-  async updateUser(id: string, data: IEditUserFields): Promise<IUser> {
+  async updateUser(
+    id: string,
+    data: IEditUserFields
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      const response = await this.instance.patch<{ user: IUser }>(
-        `/${id}`,
-        data
-      );
-      return response.data.user;
+      await this.instance.patch<{ user: IUser }>(`/${id}`, data);
+      return { success: true };
     } catch (error) {
-      throw handleError(error); // Handle and throw the error
+      const message = (error as Error).message || "Update user failed!";
+      console.error("Update user error:", message);
+      return { success: false, error: message };
     }
   }
 }

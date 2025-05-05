@@ -39,7 +39,7 @@ const router = createBrowserRouter([
         children: [{ index: true, element: <Login /> }],
       },
       {
-        path: "edit-user",
+        path: "edit-user/:userId",
         element: <PrivateRoute />, // PrivateRoute wraps the EditUser page
         children: [{ index: true, element: <EditUser /> }],
       },
@@ -73,7 +73,7 @@ createRoot(rootElement).render(
     {/* AuthProvider comes from context and wrap the application
     it allows the app to use all its functions in any component-
     isLoading, isLoggedin, user, signup, login, logout, edit */}
-    <ErrorBoundary fallback={<div>Something went wrong</div>}>
+    <ErrorBoundary fallback={<div>Something went wrong, try again later...</div>}>
       <AuthProvider>
         <RouterProvider router={router} />
       </AuthProvider>
