@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useMemo, useCallback, Suspense } from "react";
 import { useParams } from "react-router-dom";
 
 // imported services
@@ -6,48 +6,38 @@ import NoteService from "../services/note.service";
 
 // imported components
 import NoteDetail from "../components/NoteDetail";
-
-interface Note {
-  id: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  priority: boolean;
-  completed: boolean;
-}
+import { useFetch } from "../hooks/useFetch";
 
 const Note: React.FC = () => {
   const { noteId } = useParams<{ noteId: string }>(); // Access the note ID from the route params
-  const [note, setNote] = useState<Note | null>(null); // Use a nullable type for the note
   const noteService = useMemo(() => new NoteService(), []);
 
-  const refreshState = useCallback(async () => {
-    try {
-      if (noteId) {
-        const response = await noteService.getOne(noteId);
-        setNote(response.data); // Set the note data
-      }
-    } catch (error) {
-      console.error("Error fetching note:", error);
+  // Memoize the fetch function to prevent infinite loops
+  const fetchNote = useCallback(() => {
+    if (!noteId) {
+      throw new Error("Note ID is undefined");
     }
+    return noteService.getNote(noteId);
   }, [noteId, noteService]);
 
-  // Fetch the note data when the component mounts or when the noteId changes
-  useEffect(() => {
-    if (noteId) {
-      refreshState();
-    }
-  }, [noteId, refreshState]);
+  // Use the useFetch hook to fetch the note
+  const { data: note, loading, error, refetch } = useFetch(fetchNote);
 
-  if (!note) {
-    return <p>Loading...</p>; // Show a loading message while the note is being fetched
+  if (error) {
+    return <p>Error: {error}</p>; // Show an error message if fetching fails
+  }
+
+  if (!note && !loading) {
+    return <p>No note found.</p>; // Handle the case where the note is null
   }
 
   return (
     <div>
       <main className="flex max-w-7xl mx-auto mt-3">
         <div className="flex flex-col w-full">
-          <NoteDetail {...note} refreshState={refreshState} />
+          <Suspense fallback={<p>Loading note details...</p>}>
+            {note && <NoteDetail {...note} refreshNotes={refetch} />}
+          </Suspense>
         </div>
       </main>
     </div>

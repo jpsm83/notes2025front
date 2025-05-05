@@ -1,10 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
-import { Check, Star } from "lucide-react";
+import { Check, Star, Trash2 } from "lucide-react";
 
-// imported hooks
+// services
 import NoteService from "../services/note.service";
+import { toast } from "react-toastify";
 
 // Define the props for the NoteCard component
 interface INoteCardProps {
@@ -13,45 +14,59 @@ interface INoteCardProps {
   completed: boolean;
   priority: boolean;
   dueDate: string;
+  description: string; // Optional description field
+  refreshNotes: () => void; // Callback to refresh notes after an update
 }
 
-const NoteCard: React.FC<INoteCardProps> = ({
-  _id,
-  title,
-  completed,
-  priority,
-  dueDate,
-}) => {
+const NoteCard: React.FC<INoteCardProps> = (props) => {
+  const { _id, title, completed, priority, dueDate, refreshNotes } = props;
+
   const noteService = new NoteService();
   const navigate = useNavigate();
-
-  // Delete a note
-  const noteCompleted = async () => {
-    try {
-      await noteService.updateNote(_id);
-      refreshState();
-    } catch (error) {
-      console.error("Error deleting note:", error);
-    }
-  };
 
   // Toggle the priority of a note
   const togglePriority = async () => {
     try {
-      await noteService.updateOne(_id, { priority: !priority });
-      refreshState();
+      await noteService.updateNote(_id, {
+        ...props,
+        priority: !priority,
+      });
+      toast.success(
+        `Note ${priority ? "removed from" : "added to"} priority list!`
+      );
+      refreshNotes(); // Refresh notes
     } catch (error) {
       console.error("Error toggling priority:", error);
+      toast.error("Error toggling priority");
     }
   };
 
   // Toggle the completion status of a note
-  const toggleDone = async () => {
+  const toggleCompleted = async () => {
     try {
-      await noteService.updateOne(_id, { completed: !completed });
-      refreshState();
+      await noteService.updateNote(_id, {
+        ...props,
+        completed: !completed,
+      });
+      toast.success(
+        `Note ${completed ? "marked as incomplete" : "marked as complete"}!`
+      );
+      refreshNotes(); // Refresh notes
     } catch (error) {
       console.error("Error toggling completion status:", error);
+      toast.error("Error toggling completion status");
+    }
+  };
+
+  // Delete a note
+  const deleteNote = async () => {
+    try {
+      await noteService.deleteNote(_id);
+      toast.success("Note deleted successfully!");
+      refreshNotes(); // Refresh notes
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      toast.error("Error deleting note");
     }
   };
 
@@ -61,53 +76,65 @@ const NoteCard: React.FC<INoteCardProps> = ({
   };
 
   return (
-    <div className="flex justify-start w-80 mx-5 bg-gray-300 shadow-lg hover:shadow-xl hover:bg-blue-200 m-3 rounded-lg p-2">
-      <h1
-        onClick={noteDetail}
-        className="text-4xl mr-2 cursor-pointer sm:text-5xl bg-gray-100 font-bold text-yellow-600 rounded-lg p-1 flex justify-center items-center"
-      >
-        {moment(new Date(dueDate)).format("DD")}
-      </h1>
-      <div className="text-md sm:text-lg flex flex-col w-full">
-        <div className="flex justify-between">
-          <p className="text-gray-700">
-            {moment(new Date(dueDate)).format("MMM-yyyy")}
-          </p>
-          <div className="flex cursor-pointer">
-            <p onClick={togglePriority}>
-              {priority ? (
-                <Star className="h-5 text-yellow-500" />
-              ) : (
-                <Star className="h-5 text-gray-400" />
-              )}
-            </p>
-            <p onClick={toggleDone}>
-              {completed ? (
-                <Check className="h-5 text-green-600" />
-              ) : (
-                <Check className="h-5 text-gray-400" />
-              )}
-            </p>
-          </div>
+    <div className="flex flex-col w-80 mx-5 bg-white shadow-lg hover:shadow-2xl m-3 rounded-lg p-4 transition duration-200">
+      {/* Due Date */}
+      <div className="gap-4  bg-gray-100 rounded-lg p-2 flex justify-center items-center">
+        <p className="text-gray-500 text-xl">
+          {moment(new Date(dueDate)).format("MMM YYYY")}
+        </p>
+        <div className="text-4xl font-bold text-yellow-600">
+          {moment(new Date(dueDate)).format("DD")}
         </div>
-        <div className="flex justify-between">
-          <div>
-            <h2
-              onClick={noteDetail}
-              className="text-md font-bold cursor-pointer text-yellow-800 sm:text-lg"
-            >
-              {title}
-            </h2>
-          </div>
+      </div>
+      <div className="text-md sm:text-lg flex flex-col w-full mt-3 gap-4">
+        {/* Title */}
+        <h2 className="text-lg font-bold text-gray-800 mt-2">
+          <span
+            onClick={noteDetail}
+            className="cursor-pointer hover:text-blue-600 transition duration-200"
+          >
+            {title}
+          </span>
+        </h2>
 
-          {completed && (
-            <button
-              className="shadow-md items-center text-white text-center justify-center px-6 hover:shadow-xl bg-red-700 hover:scale-105 transition transform duration-200 ease-out rounded-lg"
-              onClick={noteCompleted}
-            >
-              Delete
-            </button>
-          )}
+        <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center">
+            <div className="flex space-x-2">
+              {/* Priority Toggle */}
+              <button
+                onClick={togglePriority}
+                title={priority ? "Remove from priority" : "Mark as priority"}
+              >
+                <Star
+                  size={20}
+                  strokeWidth={3}
+                  className={`cursor-pointer ${
+                    priority ? "text-yellow-500" : "text-gray-300"
+                  }`}
+                />
+              </button>
+              {/* Completed Toggle */}
+              <button
+                onClick={toggleCompleted}
+                title={completed ? "Mark as incomplete" : "Mark as complete"}
+              >
+                <Check
+                  size={20}
+                  strokeWidth={3}
+                  className={`cursor-pointer ${
+                    completed ? "text-green-600" : "text-gray-300"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+          {/* Delete Note */}
+          <button onClick={deleteNote} title="Delete note">
+            <Trash2
+              size={20}
+              className="cursor-pointer text-red-500 hover:text-red-600"
+            />
+          </button>
         </div>
       </div>
     </div>

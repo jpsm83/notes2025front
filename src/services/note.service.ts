@@ -52,7 +52,7 @@ export default class NoteService {
   }
 
   // Update a note by ID
-  async updateNote(id: string, data: INote): Promise<INote> {
+  async updateNote(id: string, data: Partial<INote>): Promise<INote> {
     return this.handleRequest(() => this.instance.patch<INote>(`/${id}`, data));
   }
 
