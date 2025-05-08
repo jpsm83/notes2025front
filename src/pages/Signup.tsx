@@ -24,6 +24,7 @@ const Signup: React.FC = () => {
       }
       navigate("/");
     } catch (error) {
+      console.error(`Signup failed, error: ${error}`);
       toast.error(`Signup failed, error: ${error}`);
     }
   };

@@ -24,6 +24,7 @@ const Login: React.FC = () => {
       }
       navigate("/");
     } catch (error) {
+      console.error(`Login failed, error: ${error}`);
       toast.error(`Login failed, error: ${error}`);
     }
   };

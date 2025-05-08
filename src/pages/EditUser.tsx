@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
@@ -17,7 +17,7 @@ import { toast } from "react-toastify";
 
 const EditUser: React.FC = () => {
   const { isLoggedin, user, setUser } = useAuth(); // Access user and edit from the auth context
-  const userService = new UserService();
+  const userService = useMemo(() => new UserService(), []);
   const navigate = useNavigate();
 
   const defaultValues = {
@@ -32,13 +32,14 @@ const EditUser: React.FC = () => {
     if (!isLoggedin || !user) {
       navigate("/login"); // Redirect to login if not logged in
     }
-  }, [isLoggedin, navigate]);
+  }, [isLoggedin, navigate, user]);
 
   console.log("user", user);
 
   const handleUpdateUser: SubmitHandler<IEditUserFields> = async (data) => {
     try {
       if (!user?._id) {
+        console.error("User ID is missing!");
         toast.error("User ID is missing");
         return;
       }
@@ -52,6 +53,7 @@ const EditUser: React.FC = () => {
       toast.success("User updated successfully");
       navigate("/");
     } catch (error) {
+      console.error(`Update failed, error: ${error}`);
       toast.error(`Update failed, error: ${error}`);
     }
   };
@@ -60,7 +62,6 @@ const EditUser: React.FC = () => {
     <UserForm
       onSubmit={handleUpdateUser}
       buttonType="Update"
-      isEditMode={true}
       defaultValues={defaultValues}
     />
   );

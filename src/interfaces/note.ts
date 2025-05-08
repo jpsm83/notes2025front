@@ -9,3 +9,15 @@ export interface INote {
     createdAt: string;
     updatedAt: string;
   }
+
+export interface ICreateNoteFields {
+    title: string;
+    dueDate: string;
+    description: string;
+  }
+
+export interface IEditNoteFields {
+    title: string;
+    dueDate: string;
+    description: string;
+  }

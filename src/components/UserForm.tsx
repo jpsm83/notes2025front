@@ -13,14 +13,12 @@ import { roles } from "../utils/enums";
 interface IUserFormProps<T extends FieldValues> {
   onSubmit: SubmitHandler<T>;
   buttonType: string;
-  isEditMode?: boolean;
   defaultValues?: Partial<T>;
 }
 
 const UserForm = <T extends FieldValues>({
   onSubmit,
   buttonType,
-  isEditMode = false,
   defaultValues = {},
 }: IUserFormProps<T>) => {
   const {
@@ -35,16 +33,16 @@ const UserForm = <T extends FieldValues>({
   const navigate = useNavigate();
 
   return (
-    <div className="flex w-full max-w-lg mx-auto flex-col bg-white shadow-lg rounded-lg p-8 m-8 border-1 border-gray-300">
+    <div className="flex w-full max-w-lg mx-auto flex-col bg-white shadow-lg rounded-lg p-8 border-1 border-gray-300">
       <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-        {isEditMode ? "Edit User" : buttonType === "Login" ? "Login" : "Signup"}
+        {buttonType === "Update" ? "Edit User" : buttonType === "Login" ? "Login" : "Signup"}
       </h2>
       <form
         className="flex flex-col space-y-6"
         onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}
       >
         {/* Username field (only for signup or edit-user) */}
-        {(isEditMode || buttonType !== "Login") && (
+        {( buttonType === "Update" || buttonType !== "Login") && (
           <div className="flex flex-col">
             <label
               className="text-sm font-medium text-gray-700 mb-1"
@@ -138,7 +136,7 @@ const UserForm = <T extends FieldValues>({
         </div>
 
         {/* Roles field (only for signup or edit-user) */}
-        {(isEditMode || buttonType === "Signup") && (
+        {( buttonType === "Update" || buttonType === "Signup") && (
           <div className="flex flex-col gap-6">
             <div className="flex flex-col">
               <label

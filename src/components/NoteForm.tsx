@@ -1,3 +1,5 @@
+import { format, parseISO } from "date-fns";
+
 import {
   useForm,
   SubmitHandler,
@@ -10,14 +12,12 @@ import { useNavigate } from "react-router-dom";
 interface INoteFormProps<T extends FieldValues> {
   onSubmit: SubmitHandler<T>;
   buttonType: string;
-  isEditMode?: boolean;
   defaultValues?: Partial<T>;
 }
 
 const NoteForm = <T extends FieldValues>({
   onSubmit,
   buttonType,
-  isEditMode = false,
   defaultValues = {},
 }: INoteFormProps<T>) => {
   const {
@@ -31,10 +31,12 @@ const NoteForm = <T extends FieldValues>({
 
   const navigate = useNavigate();
 
+  console.log(isValid);
+  
   return (
-    <div className="flex w-full max-w-lg mx-auto flex-col bg-white shadow-lg rounded-lg p-8 m-8 border-1 border-gray-300">
+    <div className="flex flex-col w-full max-w-4xl mx-6 bg-white shadow-lg hover:shadow-xl m-5 rounded-lg p-8 transition duration-200">
       <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-        {isEditMode ? "Edit Note" : "Create Note"}
+        {buttonType === "Update" ? "Edit Note" : "Create Note"}
       </h2>
       <form
         className="flex flex-col space-y-6"
@@ -46,8 +48,7 @@ const NoteForm = <T extends FieldValues>({
             className="text-sm font-medium text-gray-700 mb-1"
             htmlFor="dueDate"
           >
-            {" "}
-            Date:
+            Date
           </label>
           <input
             className="border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -56,7 +57,12 @@ const NoteForm = <T extends FieldValues>({
               required: "Due date is required",
             })}
             defaultValue={
-              defaultValues.dueDate ? String(defaultValues.dueDate) : undefined
+              defaultValues.dueDate
+                ? format(
+                    parseISO(defaultValues.dueDate as string),
+                    "yyyy-MM-dd"
+                  )
+                : undefined
             }
           />
           {errors["dueDate" as FieldPath<T>] && (
@@ -103,11 +109,11 @@ const NoteForm = <T extends FieldValues>({
           >
             Description
           </label>
-          <input
+          <textarea
             className="border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            type="text"
+            rows={4}
             {...register("description" as FieldPath<T>, {
-              required: "description is required",
+              required: "Description is required",
               maxLength: {
                 value: 200,
                 message: "Description must be max of 200 characters long",
@@ -127,21 +133,14 @@ const NoteForm = <T extends FieldValues>({
         </div>
 
         {/* Priority Field */}
-        <div className="flex flex-col">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              {...register("priority" as FieldPath<T>)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              defaultChecked={defaultValues.priority} // Use defaultChecked for initial state
-            />
-            <span className="text-gray-700">Priority</span>
-          </div>
-          {errors["priority" as FieldPath<T>] && (
-            <p className="text-sm text-red-600 mt-1">
-              {String(errors["priority" as FieldPath<T>]?.message)}
-            </p>
-          )}
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            {...register("priority" as FieldPath<T>)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            defaultChecked={defaultValues.priority} // Use defaultChecked for initial state
+          />
+          <span className="text-gray-700">Priority</span>
         </div>
 
         {/* Buttons */}
@@ -156,7 +155,7 @@ const NoteForm = <T extends FieldValues>({
           <button
             className="w-40 bg-gray-300 text-gray-700 font-medium py-2 rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition duration-200 cursor-pointer"
             type="button"
-            onClick={() => navigate("/")}
+            onClick={() => navigate(`/note/${defaultValues._id}`)}
           >
             Cancel
           </button>

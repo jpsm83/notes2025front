@@ -1,5 +1,5 @@
-import React from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useCallback, useMemo } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import moment from "moment";
 import { Check, Star, Trash2, Undo2 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -7,46 +7,59 @@ import { toast } from "react-toastify";
 // services
 import NoteService from "../services/note.service";
 
-// Define the props for the NoteDetail component
-interface INoteDetailProps {
-  _id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  priority: boolean;
-  dueDate: string;
-  refreshNotes: () => void; // Callback to refresh the note data
-}
+// hooks
+import { useFetch } from "../hooks/useFetch";
 
-const NoteDetail: React.FC<INoteDetailProps> = (props) => {
-  const {
-    _id,
-    title,
-    description,
-    completed,
-    priority,
-    dueDate,
-    refreshNotes,
-  } = props;
-
-  const noteService = new NoteService();
+const NoteDetail: React.FC = () => {
+  const { noteId } = useParams<{ noteId: string }>(); // Get noteId from URL params
+  const noteService = useMemo(() => new NoteService(), []);
   const navigate = useNavigate();
+
+  // Fetch the note details using useFetch
+  const fetchNote = useCallback(async () => {
+    if (!noteId) {
+      throw new Error("Note ID is undefined");
+    }
+    return await noteService.getNote(noteId);
+  }, [noteId, noteService]);
+
+  const { data: note, loading, error, refetch } = useFetch(fetchNote);
+
+  const renderMessage = (title: string, message: string, color = "gray") => (
+    <div className="flex justify-center items-center">
+      <div className="text-center">
+        <h2 className={`text-2xl font-bold text-${color}-700`}>{title}</h2>
+        <p className="text-lg text-gray-600 mt-2">{message}</p>
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return renderMessage("Loading", "Loading note details...", "blue");
+  }
+
+  if (error) {
+    return renderMessage("Error", error.toString(), "red");
+  }
+
+  if (!note) {
+    return renderMessage(
+      "No Note Found",
+      "The note you are looking for does not exist."
+    );
+  }
 
   // Toggle the priority of a note
   const togglePriority = async () => {
     try {
-      if (!_id) {
-        console.error("Note is undefined");
-        return;
-      }
-      await noteService.updateNote(_id, {
-        ...props,
-        priority: !priority,
+      await noteService.updateNote(note._id, {
+        ...note,
+        priority: !note.priority,
       });
       toast.success(
-        `Note ${priority ? "removed from" : "added to"} priority list!`
+        `Note ${note.priority ? "removed from" : "added to"} priority list!`
       );
-      refreshNotes(); // Refresh the note data
+      refetch(); // Refresh the note data
     } catch (error) {
       console.error("Error toggling priority:", error);
       toast.error("Error toggling priority");
@@ -56,19 +69,14 @@ const NoteDetail: React.FC<INoteDetailProps> = (props) => {
   // Toggle the completion status of a note
   const toggleCompleted = async () => {
     try {
-      if (!_id) {
-        console.error("Note is undefined");
-        return;
-      }
-
-      await noteService.updateNote(_id, {
-        ...props,
-        completed: !completed,
+      await noteService.updateNote(note._id, {
+        ...note,
+        completed: !note.completed,
       });
       toast.success(
-        `Note ${completed ? "marked as incomplete" : "marked as complete"}!`
+        `Note ${note.completed ? "marked as incomplete" : "marked as complete"}!`
       );
-      refreshNotes(); // Refresh the note data
+      refetch(); // Refresh the note data
     } catch (error) {
       console.error("Error toggling completion status:", error);
       toast.error("Error toggling completion status");
@@ -78,12 +86,7 @@ const NoteDetail: React.FC<INoteDetailProps> = (props) => {
   // Delete a note
   const deleteNote = async () => {
     try {
-      if (!_id) {
-        console.error("Note is undefined");
-        return;
-      }
-
-      await noteService.deleteNote(_id);
+      await noteService.deleteNote(note._id);
       toast.success("Note deleted successfully!");
       navigate("/"); // Redirect to the home page after deletion
     } catch (error) {
@@ -99,9 +102,9 @@ const NoteDetail: React.FC<INoteDetailProps> = (props) => {
         <p
           onClick={togglePriority}
           className="cursor-pointer"
-          title={priority ? "Remove from priority" : "Mark as priority"}
+          title={note.priority ? "Remove from priority" : "Mark as priority"}
         >
-          {priority ? (
+          {note.priority ? (
             <Star className="h-7 text-yellow-500" />
           ) : (
             <Star className="h-7 text-gray-400" />
@@ -109,16 +112,16 @@ const NoteDetail: React.FC<INoteDetailProps> = (props) => {
         </p>
         <p className="text-md sm:text-lg italic font-bold text-gray-500">
           Due Date:{" "}
-          {dueDate
-            ? moment(new Date(dueDate)).format("DD-MMM-yyyy")
+          {note.dueDate
+            ? moment(new Date(note.dueDate)).format("DD-MMM-yyyy")
             : "No due date"}
         </p>
         <p
           onClick={toggleCompleted}
           className="cursor-pointer"
-          title={completed ? "Mark as incomplete" : "Mark as complete"}
+          title={note.completed ? "Mark as incomplete" : "Mark as complete"}
         >
-          {completed ? (
+          {note.completed ? (
             <Check className="h-7 text-green-600" />
           ) : (
             <Check className="h-7 text-gray-400" />
@@ -129,9 +132,9 @@ const NoteDetail: React.FC<INoteDetailProps> = (props) => {
       {/* Title and Description */}
       <div className="flex flex-col bg-gray-100 rounded-lg p-4 mb-4">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
-          {title}
+          {note.title}
         </h2>
-        <p className="text-md sm:text-lg text-gray-600">{description}</p>
+        <p className="text-md sm:text-lg text-gray-600">{note.description}</p>
       </div>
 
       {/* Action Buttons */}
@@ -145,7 +148,7 @@ const NoteDetail: React.FC<INoteDetailProps> = (props) => {
         </button>
 
         <Link
-          to={`/edit-note/${_id}`}
+          to={`/edit-note/${note._id}`}
           className="w-40 bg-blue-600 text-white font-medium py-2 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 cursor-pointer text-center"
         >
           Edit Note

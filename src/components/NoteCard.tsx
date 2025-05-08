@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import { Check, Star, Trash2 } from "lucide-react";
@@ -8,7 +8,7 @@ import NoteService from "../services/note.service";
 import { toast } from "react-toastify";
 
 // Define the props for the NoteCard component
-interface INoteCardProps {
+interface INote {
   _id: string;
   title: string;
   completed: boolean;
@@ -18,14 +18,14 @@ interface INoteCardProps {
   refreshNotes: () => void; // Callback to refresh notes after an update
 }
 
-const NoteCard: React.FC<INoteCardProps> = (props) => {
+const NoteCard: React.FC<INote> = (props) => {
   const { _id, title, completed, priority, dueDate, refreshNotes } = props;
 
-  const noteService = new NoteService();
+  const noteService = useMemo(() => new NoteService(), []);
   const navigate = useNavigate();
 
   // Toggle the priority of a note
-  const togglePriority = async () => {
+  const togglePriority = useCallback(async () => {
     try {
       await noteService.updateNote(_id, {
         ...props,
@@ -39,10 +39,10 @@ const NoteCard: React.FC<INoteCardProps> = (props) => {
       console.error("Error toggling priority:", error);
       toast.error("Error toggling priority");
     }
-  };
+  }, [noteService, _id, priority, props, refreshNotes]);
 
   // Toggle the completion status of a note
-  const toggleCompleted = async () => {
+  const toggleCompleted = useCallback(async () => {
     try {
       await noteService.updateNote(_id, {
         ...props,
@@ -56,10 +56,10 @@ const NoteCard: React.FC<INoteCardProps> = (props) => {
       console.error("Error toggling completion status:", error);
       toast.error("Error toggling completion status");
     }
-  };
+  }, [noteService, _id, completed, props, refreshNotes]);
 
   // Delete a note
-  const deleteNote = async () => {
+  const deleteNote = useCallback(async () => {
     try {
       await noteService.deleteNote(_id);
       toast.success("Note deleted successfully!");
@@ -68,17 +68,17 @@ const NoteCard: React.FC<INoteCardProps> = (props) => {
       console.error("Error deleting note:", error);
       toast.error("Error deleting note");
     }
-  };
+  }, [noteService, _id, refreshNotes]);
 
   // Navigate to the note detail page
-  const noteDetail = () => {
+  const noteDetail = useCallback(() => {
     navigate(`/note/${_id}`);
-  };
+  }, [navigate, _id]);
 
   return (
     <div className="flex flex-col w-80 mx-5 bg-white shadow-lg hover:shadow-2xl m-3 rounded-lg p-4 transition duration-200">
       {/* Due Date */}
-      <div className="gap-4  bg-gray-100 rounded-lg p-2 flex justify-center items-center">
+      <div className="gap-4 bg-gray-100 rounded-lg p-2 flex justify-center items-center">
         <p className="text-gray-500 text-xl">
           {moment(new Date(dueDate)).format("MMM YYYY")}
         </p>

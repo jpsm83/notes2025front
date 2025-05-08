@@ -1,56 +1,57 @@
-import { useEffect, useState, useCallback, useMemo, Suspense } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 
 // context
 import { useAuth } from "../context/auth.context";
 
 // interfaces
-import { INote } from "../interfaces/note";
+interface INote {
+  _id: string;
+  description: string;
+  dueDate: string;
+  title: string;
+  priority: boolean;
+  completed: boolean;
+}
 
 // components
 import NoteCard from "../components/NoteCard";
 
 // services
 import NoteService from "../services/note.service";
+import { useFetch } from "../hooks/useFetch";
+import { toast } from "react-toastify";
 
 const Home: React.FC = () => {
   const [notes, setNotes] = useState<INote[]>([]);
   const { user } = useAuth();
   const noteService = useMemo(() => new NoteService(), []);
 
-  // get notes from the backend
+  // service to fetch notes by user ID
   const getUserNotes = useCallback(async () => {
-    if (!user) return; // If user is not logged in, do not fetch notes
+    if (!user) return [];
     try {
-      const response = await noteService.getNoteByUserId(user?._id);
-      setNotes(Array.isArray(response) ? response : [response]); // Ensure response is an array
+      return await noteService.getNoteByUserId(user._id);
     } catch (error) {
-      console.error("Error fetching notes:", error);
+      toast.error("Error fetching notes!");
+      console.error(`Error fetching notes: ${error}`);
     }
   }, [noteService, user]);
 
-  console.log(notes);
+  // useFetch hook to fetch notes
+  const { data, loading, error, refetch } = useFetch(getUserNotes);
 
-  // Fetch notes when the component mounts
   useEffect(() => {
-    if (user) {
-      getUserNotes();
-    } else {
-      setNotes([]); // Clear notes if user is not logged in
+    if (data && Array.isArray(data)) {
+      setNotes(data as INote[]);
     }
-  }, [user, getUserNotes]);
+  }, [data]);
 
-  // Display note cards for the logged-in user
+  if (error) {
+    toast.error("Error fetching notes!");
+    console.error(`Error fetching notes: ${error}`);
+  }
+
   const displayNoteCards = () => {
-    if (notes.length === 0) {
-      return (
-        <div className="bg-gray-300 m-10 shadow-lg rounded-lg p-10">
-          <h2 className="text-center text-xl sm:text-3xl font-bold text-yellow-600">
-            No notes available. Create your first note!
-          </h2>
-        </div>
-      );
-    }
-
     return notes
       .slice()
       .sort((a, b) => {
@@ -64,24 +65,42 @@ const Home: React.FC = () => {
         return aDate - bDate;
       })
       .map((note) => (
-        <NoteCard key={note._id} {...note} refreshNotes={getUserNotes} />
+        <NoteCard key={note._id} {...note} refreshNotes={refetch} />
       ));
   };
 
   return (
-    <div>
+    <div className="py-10">
       {!user ? (
-        <div className="bg-gray-300 m-10 shadow-lg rounded-lg p-10">
-          <h2 className="text-center text-xl sm:text-3xl font-bold text-yellow-600">
-            Sign in and start to organize your agenda!
+        <div className="bg-white shadow-md rounded-lg p-10 mx-auto max-w-2xl text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
+            Sign in and start organizing your agenda!
           </h2>
         </div>
+      ) : loading ? (
+        <div className="flex justify-center items-center h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
+            <p className="text-lg font-medium text-gray-600 mt-4">
+              Loading notes...
+            </p>
+          </div>
+        </div>
+      ) : notes.length === 0 ? (
+        <div className="bg-white shadow-md rounded-lg p-10 mx-auto max-w-2xl text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
+            No notes available
+          </h2>
+          <p className="text-gray-600 mt-2">
+            Create your first note to get started!
+          </p>
+        </div>
       ) : (
-        <Suspense fallback={<p>Loading note details...</p>}>
-          <div className="flex flex-col justify-center items-center m-5">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="flex flex-col gap-4 items-center justify-start">
             {displayNoteCards()}
           </div>
-        </Suspense>
+        </div>
       )}
     </div>
   );

@@ -2,7 +2,15 @@ import axios, { AxiosInstance } from "axios";
 import { handleError } from "../utils/handleError";
 
 // interfaces
-import { INote } from "../interfaces/note";
+interface INote {
+  _id?: string;
+  dueDate: string;
+  title: string;
+  description: string;
+  priority?: boolean;
+  completed?: boolean;
+  userId?: string;
+}
 
 export default class NoteService {
   private instance: AxiosInstance;
@@ -52,8 +60,15 @@ export default class NoteService {
   }
 
   // Update a note by ID
-  async updateNote(id: string, data: Partial<INote>): Promise<INote> {
-    return this.handleRequest(() => this.instance.patch<INote>(`/${id}`, data));
+  async updateNote(id: string, data: INote): Promise<{ success: boolean; error?: string }> {
+    try {
+      await this.instance.patch<INote>(`/${id}`, data);
+      return { success: true };
+    } catch (error) {
+      const message = (error as Error).message || "Update note failed!";
+      console.error("Update note error:", message);
+      return { success: false, error: message };
+    }
   }
 
   //Helper method to handle API requests

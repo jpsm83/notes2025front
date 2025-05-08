@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/auth.context";
 import "./index.css";
-import { ErrorBoundary } from "react-error-boundary";
 
 // authRoutes
 import PrivateRoute from "./authRoutes/PrivateRoute.tsx";
@@ -54,7 +53,7 @@ const router = createBrowserRouter([
         children: [{ index: true, element: <Note /> }],
       },
       {
-        path: "editNote/:noteId",
+        path: "edit-note/:noteId",
         element: <PrivateRoute />, // PrivateRoute wraps the EditNote page
         children: [{ index: true, element: <EditNote /> }],
       },
@@ -73,11 +72,9 @@ createRoot(rootElement).render(
     {/* AuthProvider comes from context and wrap the application
     it allows the app to use all its functions in any component-
     isLoading, isLoggedin, user, signup, login, logout, edit */}
-    <ErrorBoundary fallback={<div>Something went wrong, try again later...</div>}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </ErrorBoundary>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
     <ToastContainer
       position="bottom-right"
       autoClose={3000}
