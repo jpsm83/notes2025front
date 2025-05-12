@@ -1,4 +1,11 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  Suspense,
+} from "react";
+import { useSeo } from "../hooks/useSeo";
 
 // context
 import { useAuth } from "../context/auth.context";
@@ -14,14 +21,26 @@ interface INote {
 }
 
 // components
-import NoteCard from "../components/NoteCard";
+const NoteCard = React.lazy(() => import("../components/NoteCard"));
 
 // services
 import NoteService from "../services/note.service";
 import { useFetch } from "../hooks/useFetch";
 import { toast } from "react-toastify";
+import { ErrorFallback } from "../components/ErrorFallback";
+import { ErrorBoundary } from "react-error-boundary";
+import NoteSkeleton from "../skeletons/NoteSkeleton";
 
 const Home: React.FC = () => {
+  const helmet = useSeo({
+    title: "Notes Home Page",
+    description: "Main page where user notes are rendered",
+    keywords: "react, notes, todo, app",
+    image:
+      "https://play.google.com/store/apps/details?id=com.apps.diary.notepad.notebook.privatenotes.color.note&hl=en_AU",
+    url: "https://localhost:5173/",
+  });
+
   const [notes, setNotes] = useState<INote[]>([]);
   const { user } = useAuth();
   const noteService = useMemo(() => new NoteService(), []);
@@ -65,12 +84,17 @@ const Home: React.FC = () => {
         return aDate - bDate;
       })
       .map((note) => (
-        <NoteCard key={note._id} {...note} refreshNotes={refetch} />
+        <ErrorBoundary key={note._id} FallbackComponent={ErrorFallback} onReset={() => {}}>
+        <Suspense key={note._id} fallback={<NoteSkeleton />}>
+          <NoteCard key={note._id} {...note} refreshNotes={refetch} />
+        </Suspense>
+        </ErrorBoundary>
       ));
   };
 
   return (
     <div className="py-10">
+      {helmet}
       {!user ? (
         <div className="bg-white shadow-md rounded-lg p-10 mx-auto max-w-2xl text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
