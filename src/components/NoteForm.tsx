@@ -1,5 +1,3 @@
-import { format, parseISO } from "date-fns";
-
 import {
   useForm,
   SubmitHandler,
@@ -31,8 +29,6 @@ const NoteForm = <T extends FieldValues>({
 
   const navigate = useNavigate();
 
-  console.log(isValid);
-  
   return (
     <div className="flex flex-col w-full max-w-4xl mx-6 bg-white shadow-lg hover:shadow-xl m-5 rounded-lg p-8 transition duration-200">
       <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
@@ -54,15 +50,13 @@ const NoteForm = <T extends FieldValues>({
             className="border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="date"
             {...register("dueDate" as FieldPath<T>, {
+              valueAsDate: true,
               required: "Due date is required",
             })}
             defaultValue={
               defaultValues.dueDate
-                ? format(
-                    parseISO(defaultValues.dueDate as string),
-                    "yyyy-MM-dd"
-                  )
-                : undefined
+                ? new Date(defaultValues.dueDate).toISOString().split("T")[0]
+                : new Date().toISOString().split("T")[0]
             }
           />
           {errors["dueDate" as FieldPath<T>] && (
@@ -146,14 +140,18 @@ const NoteForm = <T extends FieldValues>({
         {/* Buttons */}
         <div className="flex justify-between items-center">
           <button
-            className="w-40 bg-blue-600 text-white font-medium py-2 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 cursor-pointer"
+            className={`w-40 font-medium py-2 rounded-lg shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              !isValid
+                ? "bg-gray-300 text-white cursor-not-allowed"
+                : "cursor-pointer bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+            }`}
             disabled={!isValid}
             type="submit"
           >
             {buttonType}
           </button>
           <button
-            className="w-40 bg-gray-300 text-gray-700 font-medium py-2 rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition duration-200 cursor-pointer"
+            className="w-40 bg-gray-300 text-gray-700 font-medium py-2 rounded-lg shadow-md hover:bg-gray-400 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition duration-200 cursor-pointer"
             type="button"
             onClick={() => navigate(`/note/${defaultValues._id}`)}
           >

@@ -35,8 +35,15 @@ export default class NoteService {
   }
 
   // Create a new note
-  async createNote(data: INote): Promise<INote> {
-    return this.handleRequest(() => this.instance.post<INote>("/", data));
+  async createNote(data: INote): Promise<{ success: boolean; error?: string }> {
+    try {
+      await this.instance.post<INote>("/", data);
+      return { success: true }; // Return the created note with its ID
+    } catch (error) {
+      const message = (error as Error).message || "Create note failed!";
+      console.error("Create note error:", message);
+      return { success: false, error: message };
+    }
   }
 
   // Get all notes
@@ -60,7 +67,10 @@ export default class NoteService {
   }
 
   // Update a note by ID
-  async updateNote(id: string, data: INote): Promise<{ success: boolean; error?: string }> {
+  async updateNote(
+    id: string,
+    data: INote
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       await this.instance.patch<INote>(`/${id}`, data);
       return { success: true };

@@ -68,16 +68,15 @@ const EditNote: React.FC = () => {
 
   // handle form submission
   const handleUpdateNote: SubmitHandler<IEditNoteFields> = async (data) => {
-console.log("Form data:", data);
+
     try {
       if (!noteId) {
         console.error("Note ID is missing!");
         toast.error("Note ID is missing");
         return;
       }
-console.log("Updating note with ID:", noteId);
+
       const { success, error } = await noteService.updateNote(noteId, data);
-console.log("Updated note with ID:", noteId);
 
       if (!success && error) {
         toast.warn(error);
@@ -85,7 +84,7 @@ console.log("Updated note with ID:", noteId);
       }
 
       toast.success("Note updated successfully");
-      navigate(`note/${noteId}`); // Redirect to the note detail page after successful update
+      navigate(`/note/${noteId}`); // Redirect to the note detail page after successful update
     } catch (error) {
       console.error("Error updating note:", error);
       toast.error("Error updating note");
