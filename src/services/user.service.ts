@@ -6,12 +6,18 @@ import { IEditUserFields, ISignupFields, IUser } from "../interfaces/user";
 // utils
 import { handleError } from "../utils/handleError";
 
+// check if the environment is development or production
+// development is 0 and production is 1
+const devOrProd = import.meta.env.NODE_ENV === "development" ? 0 : 1;
+// VITE_API_URL is a string with two URLs separated by "|", first one is dev and second one is prod
+const apiUrl = (import.meta.env.VITE_API_URL).split("|")[devOrProd];
+
 export default class UserService {
   private instance: AxiosInstance;
 
   constructor() {
     this.instance = axios.create({
-      baseURL: `${import.meta.env.VITE_API_URL}/api/v1/users`,
+      baseURL: `${apiUrl}/api/v1/users`,
       withCredentials: true, // Ensures cookies are sent for CORS
     });
 

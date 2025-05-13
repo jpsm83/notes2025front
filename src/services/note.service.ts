@@ -12,12 +12,18 @@ interface INote {
   userId?: string;
 }
 
+// check if the environment is development or production
+// development is 0 and production is 1
+const devOrProd = import.meta.env.NODE_ENV === "development" ? 0 : 1;
+// VITE_API_URL is a string with two URLs separated by "|", first one is dev and second one is prod
+const apiUrl = (import.meta.env.VITE_API_URL).split("|")[devOrProd];
+
 export default class NoteService {
   private instance: AxiosInstance;
 
   constructor() {
     this.instance = axios.create({
-      baseURL: `${import.meta.env.VITE_API_URL}/api/v1/notes`,
+      baseURL: `${apiUrl}/api/v1/notes`,
       withCredentials: true, // Ensures cookies are sent for CORS
     });
 

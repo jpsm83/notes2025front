@@ -11,6 +11,7 @@ import PrivateRoute from "./authRoutes/PrivateRoute.tsx";
 import AnounRoute from "./authRoutes/AnounRoute.tsx";
 import { Slide, ToastContainer } from "react-toastify";
 import Spinner from "./components/Spinner.tsx";
+import { disableReactDevTools } from '@fvilers/disable-react-devtools';
 
 // Lazy load route components
 // import with React.lazy
@@ -137,6 +138,10 @@ const router = createBrowserRouter([
     ],
   },
 ]);
+
+if (import.meta.env.NODE_ENV === 'production') {
+  disableReactDevTools();
+}
 
 const rootElement = document.getElementById("root");
 
