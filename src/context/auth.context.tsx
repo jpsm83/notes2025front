@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useRef,
   ReactNode,
 } from "react";
 import AuthService from "../services/auth.service";
@@ -15,7 +16,7 @@ interface IAuthContext {
   isLoggedin: boolean;
   user: IUser | null;
   errorAuth: string | null;
-  setUser: React.Dispatch<React.SetStateAction<IUser | null>>; // Expose setUser
+  setUser: React.Dispatch<React.SetStateAction<IUser | null>>;
   login: (data: ILoginFields) => Promise<{ success: boolean; error?: string }>;
   signup: (
     data: ISignupFields
@@ -29,6 +30,17 @@ interface IAuthProviderProps {
   children: ReactNode;
 }
 
+// Helper: Extract expiration from JWT
+const getTokenExpiry = (accessToken: string): number => {
+  try {
+    const tokenPayload = JSON.parse(atob(accessToken.split(".")[1]));
+    return tokenPayload.exp - Math.floor(Date.now() / 1000);
+  } catch (e) {
+    console.warn("Failed to parse JWT:", e);
+    return 3600; // fallback to 1 hour
+  }
+};
+
 export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedin, setIsLoggedin] = useState(false);
@@ -37,7 +49,9 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
 
   const authService = new AuthService();
   const userService = new UserService();
-  let refreshTokenInterval: NodeJS.Timeout | null = null;
+
+  // useRef to store the interval ID for token refresh
+  const refreshTokenInterval = useRef<NodeJS.Timeout | null>(null);
 
   //Handles token refresh and updates the user state.
   const refreshToken = useCallback(async () => {
@@ -49,7 +63,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
       setErrorAuth((error as Error).message);
       setIsLoggedin(false);
       setUser(null);
-      stopAutoRefresh(); // Stop auto-refresh on failure
+      stopAutoRefresh();
     }
   }, []);
 
@@ -57,13 +71,14 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   // param expiresIn - Time in seconds until the token expires.
   const startAutoRefresh = useCallback(
     (expiresIn: number) => {
-      if (refreshTokenInterval) {
-        clearInterval(refreshTokenInterval);
+      if (refreshTokenInterval.current) {
+        clearInterval(refreshTokenInterval.current);
       }
 
       // Refresh the token 1 minute before it expires
       const refreshInterval = (expiresIn - 60) * 1000;
-      refreshTokenInterval = setInterval(() => {
+
+      refreshTokenInterval.current = setInterval(() => {
         refreshToken();
       }, refreshInterval);
     },
@@ -72,9 +87,9 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
 
   // Stops the auto-refresh mechanism.
   const stopAutoRefresh = useCallback(() => {
-    if (refreshTokenInterval) {
-      clearInterval(refreshTokenInterval);
-      refreshTokenInterval = null;
+    if (refreshTokenInterval.current) {
+      clearInterval(refreshTokenInterval.current);
+      refreshTokenInterval.current = null;
     }
   }, []);
 
@@ -86,9 +101,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
         setIsLoggedin(true);
         setUser(user);
 
-        // Assume the backend provides the token expiration time in seconds
-        const tokenPayload = JSON.parse(atob(accessToken.split(".")[1]));
-        const expiresIn = tokenPayload.exp - Math.floor(Date.now() / 1000);
+        const expiresIn = getTokenExpiry(accessToken);
         startAutoRefresh(expiresIn);
       } catch (error) {
         setErrorAuth((error as Error).message);
@@ -116,9 +129,9 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
         setIsLoggedin(true);
         setUser(user);
 
-        const tokenPayload = JSON.parse(atob(accessToken.split(".")[1]));
-        const expiresIn = tokenPayload.exp - Math.floor(Date.now() / 1000);
+        const expiresIn = getTokenExpiry(accessToken);
         startAutoRefresh(expiresIn);
+
         return { success: true };
       } catch (error) {
         const message = (error as Error).message || "Login failed";
@@ -141,8 +154,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
         setIsLoggedin(true);
         setUser(user);
 
-        const tokenPayload = JSON.parse(atob(accessToken.split(".")[1]));
-        const expiresIn = tokenPayload.exp - Math.floor(Date.now() / 1000);
+        const expiresIn = getTokenExpiry(accessToken);
         startAutoRefresh(expiresIn);
 
         return { success: true };
@@ -181,11 +193,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     logout,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {isLoading ? <p>Loading...</p> : children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): IAuthContext => {

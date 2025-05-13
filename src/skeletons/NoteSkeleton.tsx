@@ -1,6 +1,6 @@
 import ContentLoader from "react-content-loader"
 
-const NoteSkeleton = (props: any) => (
+const NoteSkeleton = () => (
   <ContentLoader 
     speed={2}
     width={240}
@@ -8,7 +8,6 @@ const NoteSkeleton = (props: any) => (
     viewBox="0 0 240 134"
     backgroundColor="#f3f3f3"
     foregroundColor="#ebebeb"
-    {...props}
   >
     <rect x="22" y="67" rx="3" ry="3" width="204" height="24" /> 
     <rect x="22" y="10" rx="3" ry="3" width="204" height="49" /> 

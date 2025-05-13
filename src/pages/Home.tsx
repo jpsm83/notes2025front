@@ -30,6 +30,7 @@ import { toast } from "react-toastify";
 import { ErrorFallback } from "../components/ErrorFallback";
 import { ErrorBoundary } from "react-error-boundary";
 import NoteSkeleton from "../skeletons/NoteSkeleton";
+import Spinner from "../components/Spinner";
 
 const Home: React.FC = () => {
   const helmet = useSeo({
@@ -84,10 +85,14 @@ const Home: React.FC = () => {
         return aDate - bDate;
       })
       .map((note) => (
-        <ErrorBoundary key={note._id} FallbackComponent={ErrorFallback} onReset={() => {}}>
-        <Suspense key={note._id} fallback={<NoteSkeleton />}>
-          <NoteCard key={note._id} {...note} refreshNotes={refetch} />
-        </Suspense>
+        <ErrorBoundary
+          key={note._id}
+          FallbackComponent={ErrorFallback}
+          onReset={() => {}}
+        >
+          <Suspense key={note._id} fallback={<NoteSkeleton />}>
+            <NoteCard key={note._id} {...note} refreshNotes={refetch} />
+          </Suspense>
         </ErrorBoundary>
       ));
   };
@@ -102,14 +107,7 @@ const Home: React.FC = () => {
           </h2>
         </div>
       ) : loading ? (
-        <div className="flex justify-center items-center h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
-            <p className="text-lg font-medium text-gray-600 mt-4">
-              Loading notes...
-            </p>
-          </div>
-        </div>
+        <Spinner />
       ) : notes.length === 0 ? (
         <div className="bg-white shadow-md rounded-lg p-10 mx-auto max-w-2xl text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">

@@ -9,6 +9,7 @@ import NoteService from "../services/note.service";
 
 // hooks
 import { useFetch } from "../hooks/useFetch";
+import Spinner from "./Spinner";
 
 const NoteDetail: React.FC = () => {
   const { noteId } = useParams<{ noteId: string }>(); // Get noteId from URL params
@@ -35,7 +36,7 @@ const NoteDetail: React.FC = () => {
   );
 
   if (loading) {
-    return renderMessage("Loading", "Loading note details...", "blue");
+    return <Spinner />;
   }
 
   if (error) {
@@ -51,6 +52,11 @@ const NoteDetail: React.FC = () => {
 
   // Toggle the priority of a note
   const togglePriority = async () => {
+    if (!note._id) {
+      console.error("Note ID is undefined");
+      toast.error("Unable to perform the action. Note ID is missing.");
+      return;
+    }
     try {
       await noteService.updateNote(note._id, {
         ...note,
@@ -68,13 +74,20 @@ const NoteDetail: React.FC = () => {
 
   // Toggle the completion status of a note
   const toggleCompleted = async () => {
+    if (!note._id) {
+      console.error("Note ID is undefined");
+      toast.error("Unable to perform the action. Note ID is missing.");
+      return;
+    }
     try {
       await noteService.updateNote(note._id, {
         ...note,
         completed: !note.completed,
       });
       toast.success(
-        `Note ${note.completed ? "marked as incomplete" : "marked as complete"}!`
+        `Note ${
+          note.completed ? "marked as incomplete" : "marked as complete"
+        }!`
       );
       refetch(); // Refresh the note data
     } catch (error) {
@@ -85,6 +98,11 @@ const NoteDetail: React.FC = () => {
 
   // Delete a note
   const deleteNote = async () => {
+    if (!note._id) {
+      console.error("Note ID is undefined");
+      toast.error("Unable to perform the action. Note ID is missing.");
+      return;
+    }
     try {
       await noteService.deleteNote(note._id);
       toast.success("Note deleted successfully!");

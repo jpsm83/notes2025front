@@ -5,10 +5,8 @@ import { useAuth } from "../context/auth.context";
 // PrivateRoute allows access to specific pages ONLY if you are logged in.
 // Example: Edit user page.
 const PrivateRoute: React.FC = () => {
-  const { isLoggedin, isLoading } = useAuth();
-
-  if (isLoading) return <p>Loading...</p>;
-
+  const { isLoggedin } = useAuth();
+  
   return isLoggedin ? <Outlet /> : <Navigate to="/login" replace />;
 };
 

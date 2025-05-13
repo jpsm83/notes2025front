@@ -9,6 +9,7 @@ import NoteForm from "../components/NoteForm";
 import { useFetch } from "../hooks/useFetch";
 import { SubmitHandler } from "react-hook-form";
 import { toast } from "react-toastify";
+import Spinner from "../components/Spinner";
 
 // interfaces
 interface IEditNoteFields {
@@ -52,7 +53,7 @@ const EditNote: React.FC = () => {
   );
 
   if (loading) {
-    return renderMessage("Loading", "Loading note details...", "blue");
+    return <Spinner />;
   }
 
   if (error) {

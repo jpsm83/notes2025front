@@ -9,6 +9,7 @@ import NoteService from "../services/note.service";
 
 // hooks
 import { useFetch } from "../hooks/useFetch";
+import Spinner from "../components/Spinner";
 
 const Note: React.FC = () => {
   const { noteId } = useParams<{ noteId: string }>(); // Get noteId from URL params
@@ -35,7 +36,7 @@ const Note: React.FC = () => {
   );
 
   if (loading) {
-    return renderMessage("Loading", "Loading note details...", "blue");
+    return <Spinner />;
   }
 
   if (error) {

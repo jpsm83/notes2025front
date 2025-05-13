@@ -3,14 +3,17 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/auth.context";
 import "./index.css";
+// helmet is used for SEO
 import { HelmetProvider } from "react-helmet-async";
 
 // authRoutes
 import PrivateRoute from "./authRoutes/PrivateRoute.tsx";
 import AnounRoute from "./authRoutes/AnounRoute.tsx";
 import { Slide, ToastContainer } from "react-toastify";
+import Spinner from "./components/Spinner.tsx";
 
 // Lazy load route components
+// import with React.lazy
 const App = lazy(() => import("./App"));
 const Home = lazy(() => import("./pages/Home"));
 const Note = lazy(() => import("./pages/Note"));
@@ -26,7 +29,8 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />, // App will serve as the layout
     errorElement: (
-      <Suspense fallback={<div>Loading...</div>}>
+      // because we are using lazy loading, we need to wrap the error element with Suspense
+      <Suspense fallback={<Spinner />}>
         <NotFoundPage />
       </Suspense>
     ),
@@ -34,7 +38,8 @@ const router = createBrowserRouter([
       {
         index: true,
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          // because we are using lazy loading, we need to wrap the error element with Suspense
+          <Suspense fallback={<Spinner />}>
             <Home />
           </Suspense>
         ),
@@ -46,7 +51,8 @@ const router = createBrowserRouter([
           {
             index: true,
             element: (
-              <Suspense fallback={<div>Loading...</div>}>
+              // because we are using lazy loading, we need to wrap the error element with Suspense
+              <Suspense fallback={<Spinner />}>
                 <Signup />
               </Suspense>
             ),
@@ -60,7 +66,8 @@ const router = createBrowserRouter([
           {
             index: true,
             element: (
-              <Suspense fallback={<div>Loading...</div>}>
+              // because we are using lazy loading, we need to wrap the error element with Suspense
+              <Suspense fallback={<Spinner />}>
                 <Login />
               </Suspense>
             ),
@@ -74,7 +81,8 @@ const router = createBrowserRouter([
           {
             index: true,
             element: (
-              <Suspense fallback={<div>Loading...</div>}>
+              // because we are using lazy loading, we need to wrap the error element with Suspense
+              <Suspense fallback={<Spinner />}>
                 <EditUser />
               </Suspense>
             ),
@@ -88,7 +96,8 @@ const router = createBrowserRouter([
           {
             index: true,
             element: (
-              <Suspense fallback={<div>Loading...</div>}>
+              // because we are using lazy loading, we need to wrap the error element with Suspense
+              <Suspense fallback={<Spinner />}>
                 <CreateNote />
               </Suspense>
             ),
@@ -102,7 +111,8 @@ const router = createBrowserRouter([
           {
             index: true,
             element: (
-              <Suspense fallback={<div>Loading...</div>}>
+              // because we are using lazy loading, we need to wrap the error element with Suspense
+              <Suspense fallback={<Spinner />}>
                 <Note />
               </Suspense>
             ),
@@ -116,7 +126,8 @@ const router = createBrowserRouter([
           {
             index: true,
             element: (
-              <Suspense fallback={<div>Loading...</div>}>
+              // because we are using lazy loading, we need to wrap the error element with Suspense
+              <Suspense fallback={<Spinner />}>
                 <EditNote />
               </Suspense>
             ),
