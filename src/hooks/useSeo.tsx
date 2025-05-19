@@ -2,7 +2,7 @@
 import { Helmet } from "react-helmet-async";
 import React from "react";
 
-export interface UseSeoProps {
+export interface IUseSeoProps {
   title?: string;
   description?: string;
   keywords?: string;
@@ -16,7 +16,7 @@ export function useSeo({
   keywords,
   image,
   url,
-}: UseSeoProps): React.ReactElement {
+}: IUseSeoProps): React.ReactElement {
   return (
     <Helmet>
       {title && <title>{title}</title>}

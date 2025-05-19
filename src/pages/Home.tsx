@@ -1,7 +1,6 @@
 import React, {
   useEffect,
   useState,
-  useCallback,
   useMemo,
   Suspense,
 } from "react";
@@ -46,19 +45,22 @@ const Home: React.FC = () => {
   const { user } = useAuth();
   const noteService = useMemo(() => new NoteService(), []);
 
-  // service to fetch notes by user ID
-  const getUserNotes = useCallback(async () => {
-    if (!user) return [];
-    try {
-      return await noteService.getNoteByUserId(user._id);
-    } catch (error) {
-      toast.error("Error fetching notes!");
-      console.error(`Error fetching notes: ${error}`);
-    }
-  }, [noteService, user]);
+  // // service to fetch notes by user ID
+  // const getUserNotes = useCallback(async () => {
+  //   if (!user) return [];
+  //   try {
+  //     return await noteService.getNoteByUserId(user._id);
+  //   } catch (error) {
+  //     toast.error("Error fetching notes!");
+  //     console.error(`Error fetching notes: ${error}`);
+  //   }
+  // }, [noteService, user]);
 
   // useFetch hook to fetch notes
-  const { data, loading, error, refetch } = useFetch(getUserNotes);
+const { data, loading, error, refetch } = useFetch(async() => {
+  if (!user) return Promise.resolve([]);
+  return await noteService.getNoteByUserId(user._id);
+});
 
   useEffect(() => {
     if (data && Array.isArray(data)) {
