@@ -26,11 +26,11 @@ export function useFetch<T>(fetchFn: () => Promise<T>): IUseFetchResult<T> {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchFn]);
 
   useEffect(() => {
     fetchData(); // Automatically fetch data on mount
-  }, [fetchFn]);
+  }, []);
 
   const resetHook = useCallback(() => {
     setData(null);
