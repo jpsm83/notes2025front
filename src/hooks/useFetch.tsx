@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 
-interface IUseFetchResult<T> {
+interface IUseFetch<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
@@ -8,7 +8,7 @@ interface IUseFetchResult<T> {
   resetHook: () => void;
 }
 
-export function useFetch<T>(fetchFn: () => Promise<T>): IUseFetchResult<T> {
+export function useFetch<T>(fetchFn: () => Promise<T>): IUseFetch<T> {
   const [data, setData] = useState<T | null>(null); // State to hold the fetched data
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
